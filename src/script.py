@@ -21,7 +21,7 @@ def select_and_read_file(file_path):
                 int32_data[int32_data >= 2**23] -= 2**24
 
                 # Reshape the data into the desired matrix
-                F = int32_data.reshape(10, 120000)
+                F = int32_data.reshape(120000, 10)
 
                 # Write output to csv file in output directory
                 np.savetxt("../output/F_Matrix.csv", F, delimiter=",")
