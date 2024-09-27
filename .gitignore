@@ -1,2 +1,4 @@
 # ignore environment configuration
 venv
+
+*/__pycache__
