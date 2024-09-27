@@ -15,7 +15,7 @@ def select_and_read_file(file_path):
             
                 # Convert the 24-bit chunks to signed 32-bit integers
                 # By shifting and combining the 3 bytes to create a 32-bit signed integer
-                int32_data = (data[:, 0].astype(np.int32) << 16) | (data[:, 1] << 8) | data[:, 2]
+                int32_data = (data[:, 0].astype(np.int32) << 16) | (data[:, 1].astype(np.int32) << 8) | data[:, 2].astype(np.int32)
 
                 # Handle sign extension for negative values (if the 24-bit number is negative)
                 int32_data[int32_data >= 2**23] -= 2**24
