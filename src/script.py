@@ -30,7 +30,6 @@ def select_and_read_file():
 
                 # Reshape the data into the desired matrix
                 F = int32_data.reshape(10, 120000)
-                F = F.transpose()
 
                 print(F)
                 
