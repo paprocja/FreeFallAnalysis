@@ -75,6 +75,10 @@ while flag == 1
     % reads and opens the .bin file and converts to double.
 %     file=fopen([filepath,'#',filename]);
     file = fopen([filepath, 'bLog', filename, '.bin']);
+
+    %% THIS IS VERY IMPORTANT
+    %% Uses the file that was opened and reads it into a matrix
+    %% Figure out what this call does in matlab and find a way to do the same thing in python
     F=fread(file,[10,120000],'bit24=>int32','b'); F=F';
     
     % sets up the excel spreadsheet
@@ -93,6 +97,7 @@ while flag == 1
     % gets the data from the 250g accelerometer (because it will always be
     % maxed out and represent the peak deceleration)
 
+    %% we have selected a variable so we are zooming in now
     if max(g250g(start1:ent1))>200
         dec1=g250g(start1:ent1);%-off1;
         off2 = mean(g250g(ent1+1000:ent1+2000));
@@ -109,8 +114,11 @@ while flag == 1
         dec1=g2g(start1:ent1);%-off1;
         off2 = mean(g2g(ent1+1000:ent1+2000));
     end
+
+    %% Bring the graph back to 0 to help with integration
     dec1=dec1-off2; % Deceleration through free-fall
 
+    %% ignore
     pp1 = ppm(start1:ent1);
     
     % gets the data from the 2g accelerometer (because it will always be
@@ -121,6 +129,7 @@ while flag == 1
     % finds the end of the drop where acceleration = 1g.
     ent2 = findent2(dec1,ploc,start1);    
     
+    %% just plots the 2g
     % plots the 2g and 250g acceleration data 
     figure2 = figure('Color','w','units','normalized','outerposition',...
         [.125 0.4 .75 .5]);
@@ -136,10 +145,12 @@ while flag == 1
     grid on;
     drawnow;
 
+    %% Will get some numbers to work with
+    %% Prompt user for the spike that they want to enter
+    %% Show user preview of what they selected 
+    %% Spike is the x value 
     % select the start of penetration
     spike = input('Spike step?');
-%     ent2 = input('end step?');
-
     
     % start and end of deployment.
     dec2 = dec1(spike:ent2);
@@ -153,14 +164,19 @@ while flag == 1
     % numeric integration using the trapezoidal rule to convert from
     % acceleration to velocity, in m/s
     v=cumtrapz(time,decms);
+    
+    %% find a better way to do this
     vmax=max(v);
+    %% vel should be nearly 0
     vel=vmax-v;
+
     
     % numeric integration using trapezoidal rule to convert from velocity
     % to penetration depth, in m.
     dep=cumtrapz(time,vel); 
     
     % find the area based on the penetration depth, area type, and the tip
+    %% gives are of the penetrometer
     A = areafind(tiptype,atype,dep,tlength);
 
 
@@ -170,9 +186,11 @@ while flag == 1
     Fbe = (mass*(dec2)*9.81); %In Air
 %     Fbe = ((mass-buoy)*dec2*9.81); %In Water
 
+    %% convert dynamic to static will get from sponsor
     qdyn = ldivide(A,Fbe);  % dynamic bearing capacity [Pa]
     srcv = log10(vel/0.02);  % Velocity portion of the strain rate correction. 
-    % The 0.02 represents the quasi-static constant based on the rate of CPTs.    
+    % The 0.02 represents the quasi-static constant based on the rate of CPTs. 
+    %% user should be able to input or select srfk, srfn
     srfK = [0.2 0.4 1 1.5]; %List of strain rate factors, K, to run
     srfn = {'02', '04', '1' ,'15'}; %List of names for each srfK
     clear i
@@ -182,6 +200,8 @@ while flag == 1
         statement3 = ['qsbc',srfn{i},'= qsbc',srfn{i},'/1000;']; eval(statement3); %QSBC [kPa]
     end
 
+    %% end conversion dynamic to static
+
     figure;
     set(gcf,'DefaultFigureWindowStyle','docked')
     plot(qsbc1);
@@ -189,6 +209,8 @@ while flag == 1
     plot(qsbc15);
     drawnow;
     
+    %% after the calculations are done
+    %% need to have a window so the data makes sense
     % start and end points for plotting the qsbc. 
     start3=input('Start time stamp?');
     ent3=input('End time stamp?');
@@ -199,7 +221,7 @@ while flag == 1
     depr1=dep(start3:ent3);
     velr=vel(1:ent3);
     dec2r=dec2(1:ent3);
-    pp2 = pp1(1:ent3);
+    %% WRONG pp2 = pp1(1:ent3);
 
     % data limited by the new start and end points selected.
     qsbc1r=qsbc1(start3:ent3);
@@ -207,9 +229,11 @@ while flag == 1
     qsbc02r=qsbc02(start3:ent3);
     qsbc04r=qsbc04(start3:ent3);
 
-    pp3 = pp2(start3:ent3);
+    %% WRONG pp3 = pp2(start3:ent3);
+    %% pascals to kilo pascals
     qdynr=qdyn(start3:ent3)./1000; % dynamic bearing capacity
 
+    %% ignore for now
     % qsbc at K = 1.25 and K = 0.3 based on the average of K = 1.0-K = 1.5
     % and K = 0.2- K = 0.4, respectively.
     qsbc_av115=(qsbc1r+qsbc15r)/2;
@@ -223,11 +247,15 @@ while flag == 1
     qsbcall0204=[qsbc02r;qsbc01rev];
     depr1rev=flipud(depr1);
     depall=[depr1;depr1rev];
+     %% end ignore
 
+    %% depth y velocity x,  depth y acceleration x, depth y dynamic bearing capacity c (corrected and regular)
+    %% just for the area that we already selected start to end of spike
     % generation of the final figure
     fig = genfinalfig(qsbcall115,qsbcall0204,depall,qsbc_av115,qsbc_av0204,depr,depr1,dec2r,velr,qdynr);
     print(fig,'-dpng','-r300',[filepath_save,'bLog',filename,'-',num2str(filenum)]);
 
+    %% statistics about the data 
     % settting some stuff up for saving
     Penetration_time=(length(dec2))*1000/2000 ;
     [Max_QSBCav0204,I2] = max(qsbc_av0204);
@@ -325,6 +353,7 @@ function [g2g,g18g,g50g,ppm,gX55g,gY55g,g200g,g250g] = gdata(F,BD)
             g200g(end) = []; g200g = [1;g200g];
             ppm=ppm*6.89475729; % convert into kPa
             
+            % x and y factors
         case 8 % calibration factors from Feb 2023
             g2g=((double(F(:,3)))--48961.0)/1629804.6; %accelerometers are in g
             g18g=((double(F(:,4)))-45301.2)/160611.4;
@@ -334,11 +363,14 @@ function [g2g,g18g,g50g,ppm,gX55g,gY55g,g200g,g250g] = gdata(F,BD)
             gX55g=((double(F(:,8))-52767.2)/64099.0);
             gY55g=((double(F(:,9)))-28735.5)/63839.9;
             g250g=((double(F(:,10)))-46439.9)/13677.9;
+            ppm=ppm*6.89475729; % convert into kPa
+
+            %% DO NOT WORRY ABOUT THIS
             g2g(end) = []; g2g = [1;g2g];
             g200g(end) = []; g200g = [1;g200g];
             g18g(end) = []; g18g = [1;g18g];
             g200g(end) = []; g200g = [1;g200g];
-            ppm=ppm*6.89475729; % convert into kPa
+
     end
 end
 
@@ -419,6 +451,7 @@ function [mass,length] = tipprops(tiptype)
     end
 end
 
+%% GET input for the types from the user
 function A = areafind(tiptype,atype,d,tlength)
 % finds the area of the penetrometer that is in contact with the soil
     clear k

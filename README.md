@@ -8,3 +8,6 @@
 - keep in mind the install location you selected
 3. Navigate to the install location you selected and run 'dropView_v1100.exe'
 4. Select an input binary file from 'Aquafort 08-01-2023' directory 
+
+
+# Software Requirements
