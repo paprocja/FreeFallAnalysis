@@ -1,15 +1,7 @@
-import tkinter as tk
-from tkinter import filedialog
 import numpy as np
 
 # Function to open the file dialog and read the selected file
-def select_and_read_file():
-    # Create a root window, but don't display it
-    root = tk.Tk()
-    root.withdraw()  # Hide the root window
-
-    # Open a file dialog and ask the user to select a file
-    file_path = filedialog.askopenfilename(title="Select a file")
+def select_and_read_file(file_path):
 
     # Check if the user selected a file
     if file_path:
