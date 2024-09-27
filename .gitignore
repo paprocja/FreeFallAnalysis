@@ -1,2 +1,6 @@
 # ignore environment configuration
 venv
+
+*/__pycache__
+
+ponsor-docs/CS Capstone/BD_InWater.m

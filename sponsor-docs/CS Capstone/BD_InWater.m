@@ -54,7 +54,7 @@ while flag == 1
     
     % read BlueDrop raw files; change this to match the file location where you
     % want to read the data from
-    filepath = 'C:\Users\jp1709\OneDrive - USNH\Documents\blueDrop\data\Aquaculture\Aquafort 08-01-2023\';
+    filepath = 'Aquafort 08-01-2023\';
     
     % screen prompt to input the name of the .bin file you want to read
     % (note: you only need the four digit/letter code, including any 0's,

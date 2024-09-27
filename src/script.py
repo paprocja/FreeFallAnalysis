@@ -23,6 +23,9 @@ def select_and_read_file(file_path):
                 # Reshape the data into the desired matrix
                 F = int32_data.reshape(120000, 10)
 
+                # Write output to txt file
+                np.savetxt("../output/F_Matrix.csv", F, delimiter=",")
+
                 print(F)
                 
         except Exception as e:
