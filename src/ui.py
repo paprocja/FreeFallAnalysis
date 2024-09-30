@@ -14,9 +14,11 @@ def create_ui():
 
     label = tk.Label(root, text="Click to select file to read")
     label.pack(pady=10)
+    label.pack(padx=50)
 
     button = tk.Button(root, text="Select File", command=on_button_click)
     button.pack(pady=10)
+    button.pack(padx=50)
 
     root.mainloop()
 
