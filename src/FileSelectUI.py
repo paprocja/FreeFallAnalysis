@@ -31,13 +31,24 @@ class FileSelectUI:
         # UI padding
         label.pack(pady=10)
         label.pack(padx=50)
+        
 
         # configure the button to execute on_button_click on click
-        button = tk.Button(self.root, text="Select File", command=self.on_button_click)
+        raw_file_button = tk.Button(self.root, text="Select Data File", command=self.on_button_click)
 
         # UI padding
-        button.pack(pady=10)
-        button.pack(padx=50)
+        raw_file_button.pack(pady=10)
+        raw_file_button.pack(padx=25)
+        raw_file_button.pack(side="left")
+
+        # button to slelect existing data file
+        existing_file_button = tk.Button(self.root, text="Select Existing File", command=self.on_button_click)
+
+        # UI padding
+        existing_file_button.pack(pady=10)
+        existing_file_button.pack(padx=25)
+        existing_file_button.pack(side="right")
+
 
         # execute the main UI loop
         self.root.mainloop()
