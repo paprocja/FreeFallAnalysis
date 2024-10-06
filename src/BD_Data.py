@@ -120,7 +120,7 @@ class BD_Data:
                 self.ppm *= 6.89475729  # Convert to kPa
             case 8:
                 # calibration factors from Feb 2023
-                self.g2g = ((self.data[:, 2]) - 48961.0) / 1629804.6
+                self.g2g = ((self.data[:, 2]) + 48961.0) / 1629804.6
                 self.g18g = ((self.data[:, 3] - 45301.2) / 160611.4)
                 self.g50g = ((self.data[:, 4] - 208714.3) / 63704.3)
                 self.ppm = ((self.data[:, 5] - 96576.0) / 19436.3)
@@ -129,6 +129,7 @@ class BD_Data:
                 self.gY55g = ((self.data[:, 8] - 28735.5) / 63839.9)
                 self.g250g = ((self.data[:, 9] - 46439.9) / 13677.9)
                 self.ppm *= 6.89475729  # Convert to kPa
+
             case _:
                 raise Exception(f'Unknown Blue Drop #{bdid}')
 
