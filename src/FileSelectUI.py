@@ -16,39 +16,31 @@ class FileSelectUI:
 
         try:
             # run the command to get the data from the file
-            self.command(file_path)
+            self.command(file_path, int(self.selected_option.get()))
         finally:
             self.dispose()
 
     #makes the ui
     def create_ui(self):
-        # add a title to the UI
+        # add a title to the UI window
         self.root.title("File Reader")
         
         # add a label to the UI
         label = tk.Label(self.root, text="Click to select file to read")
+        label.pack(pady=10, padx=50)
 
-        # UI padding
-        label.pack(pady=10)
-        label.pack(padx=50)
-        
-
-        # configure the button to execute on_button_click on click
+        # button to open select a file dialog and load data
         raw_file_button = tk.Button(self.root, text="Select Data File", command=self.on_button_click)
+        raw_file_button.pack(pady=10, padx=25, side='left')
 
-        # UI padding
-        raw_file_button.pack(pady=10)
-        raw_file_button.pack(padx=25)
-        raw_file_button.pack(side="left")
-
-        # button to slelect existing data file
-        existing_file_button = tk.Button(self.root, text="Select Existing File", command=self.on_button_click)
-
-        # UI padding
-        existing_file_button.pack(pady=10)
-        existing_file_button.pack(padx=25)
-        existing_file_button.pack(side="right")
-
+        # variable to store blueDrop id number (default 8)
+        self.selected_option = tk.StringVar(self.root)
+        self.selected_option.set('8')
+        # options
+        options = ['1', '2', '3', '8']
+        # dropdown to select blueDrop id number
+        bD_dropdown = tk.OptionMenu(self.root, self.selected_option, *options)
+        bD_dropdown.pack(pady=10, padx=25, side="right")
 
         # execute the main UI loop
         self.root.mainloop()
