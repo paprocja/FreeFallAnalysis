@@ -133,10 +133,19 @@ class BD_Data:
             case _:
                 raise Exception(f'Unknown Blue Drop #{bdid}')
 
-    ## Displays a plot of a peak so that a user can select a spike from within the peak 
-    ## Returns a numpy array that contains the peak offset around 1 for the relevant meter
-    ## The return will be integrated over the interval spike selection to y = 1
     def display_peak(self, peak_center):
+        """
+        Displays a plot of a peak so that a user can determine which spike they want within the pea
+        The return will be integrated over the interval spike selection to y = 1
+
+        Parameters
+            peak_center: int
+                the location of the center of the peak
+        
+        Returns
+            numpy array that contains the peak offset around 1 for the relevant meter
+
+        """
         ## Get an interval around the center of the peak
         interval_start, interval_end = self.get_peak_bounds(self, peak_center)
 
@@ -151,6 +160,21 @@ class BD_Data:
     ## Returns the start and end of the interval that the peak is 
     ## TODO this is copied from the script, make sure that this reliably surrounds the peak
     def get_peak_bounds(self, peak_center):
+        """
+        Gets the bounds for a peak.
+
+        Parameters
+            peak_center: int
+                the location of the center of the peak
+        
+        Return
+            int:
+                the start of the interval
+            int:
+                the end of the interval
+
+        """
+                
         if peak_center <= 1500:
             return 1, peak_center + 500
         elif peak_center > 119500:
@@ -160,10 +184,39 @@ class BD_Data:
 
     ## Gets offset for a meter based on the meter and end value
     def get_meter_offset(self, meter, end):
+        """
+        Gets the meter offset for a specific meter
+
+        Parameters
+            meter: numpy array
+                the numpy array which the offset will be calculated off of
+            end: int
+                the end value of the interval
+        
+        Return
+            float:
+                the offset for a specific meter's data and interval
+
+        """
         return np.mean(meter[end + 1000:end + 2000])
         
     ## Gets a column (meter) from the matrix based off the magnitude of the peak, centers the column around 0
     def get_peak_for_meter(self, start, end):
+        """
+        Gets the peak that can be displayed and integrated.
+
+        Parameters
+            start: int
+                the start of the interval to display
+            end: int
+                the end of the interval to display
+        
+        Return
+            numpy array:
+                an array of offset data for a specific meter over an interval
+
+        """
+
         ## Returns the max value in the 250g array within the interval
         max_250 = np.Max(self.g250g[start:end])
 
