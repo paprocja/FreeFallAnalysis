@@ -133,10 +133,58 @@ class BD_Data:
             case _:
                 raise Exception(f'Unknown Blue Drop #{bdid}')
 
-    def convert_data(self):
-        # TODO
-        return None
+    ## Displays a plot of a peak so that a user can select a spike from within the peak 
+    ## Returns a numpy array that contains the peak offset around 1 for the relevant meter
+    ## The return will be integrated over the interval spike selection to y = 1
+    def display_peak(self, peak_center):
+        ## Get an interval around the center of the peak
+        interval_start, interval_end = self.get_peak_bounds(self, peak_center)
 
+        ## Get an array that represents the data in the peak for the relevant meter
+        peak = self.get_peak_for_meter(self, interval_start, interval_end)
+
+        ## Plot peak so that user can select an x 
+        ## TODO 
+
+        return peak
+    
+    ## Returns the start and end of the interval that the peak is 
+    ## TODO this is copied from the script, make sure that this reliably surrounds the peak
+    def get_peak_bounds(self, peak_center):
+        if peak_center <= 1500:
+            return 1, peak_center + 500
+        elif peak_center > 119500:
+            return peak_center - 1500, 120000
+        else:
+            return peak_center - 1500, peak_center + 500
+
+    ## Gets offset for a meter based on the meter and end value
+    def get_meter_offset(self, meter, end):
+        return np.mean(meter[end + 1000:end + 2000])
+        
+    ## Gets a column (meter) from the matrix based off the magnitude of the peak, centers the column around 0
+    def get_peak_for_meter(self, start, end):
+        ## Returns the max value in the 250g array within the interval
+        max_250 = np.Max(self.g250g[start:end])
+
+        ## Returns the max value in the 250g array within the interval
+        max_200 = np.Max(self.g200g[start:end])
+
+        ## Based on the max value of the peak determine which column to use and how to offset the column
+        if (max_250 > 200):
+            meter_to_analyze = self.g250g[start:end]
+        if (max_200 > 50):
+            meter_to_analyze = self.g200g[start:end]
+        if (max_200 > 18):
+            meter_to_analyze = self.g50g[start:end]
+        if (max_200 > 1.7):
+            meter_to_analyze = self.g18g[start:end]
+
+        ## Get the offset for the specific meter
+        offset = self.get_meter_offset(meter_to_analyze, end)
+
+        ## Apply the offset to the data and return
+        return meter_to_analyze - offset
 
     def save_data(self, file_path):
         """
