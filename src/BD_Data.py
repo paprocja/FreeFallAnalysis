@@ -224,15 +224,19 @@ class BD_Data:
         max_200 = np.max(self.g200g[start:end])
 
         ## Based on the max value of the peak determine which column to use and how to offset the column
-        meter_to_analyze = self.g250g[start:end]
+        meter_to_analyze = self.g250g
+        
         if (max_250 > 200):
-            meter_to_analyze = self.g250g[start:end]
+            meter_to_analyze = self.g250g
         if (max_200 > 50):
-            meter_to_analyze = self.g200g[start:end]
+            meter_to_analyze = self.g200g
         if (max_200 > 18):
-            meter_to_analyze = self.g50g[start:end]
+            meter_to_analyze = self.g50g
         if (max_200 > 1.7):
-            meter_to_analyze = self.g18g[start:end]
+            meter_to_analyze = self.g18g
+
+        print("METER: \n")
+        print(meter_to_analyze)
 
         ## Get the offset for the specific meter
         offset = self.get_meter_offset(meter_to_analyze, end)
