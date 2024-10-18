@@ -28,6 +28,8 @@ def main():
 
     save_to_csv()
 
+    bd_data.display_peak(24095)
+
     # print the numpy array to console
     bd_data.output()
 

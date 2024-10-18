@@ -147,10 +147,10 @@ class BD_Data:
 
         """
         ## Get an interval around the center of the peak
-        interval_start, interval_end = self.get_peak_bounds(self, peak_center)
+        interval_start, interval_end = self.get_peak_bounds(peak_center)
 
         ## Get an array that represents the data in the peak for the relevant meter
-        peak = self.get_peak_for_meter(self, interval_start, interval_end)
+        peak = self.get_peak_for_meter(interval_start, interval_end)
 
         ## Plot peak so that user can select an x 
         ## TODO 
@@ -218,12 +218,13 @@ class BD_Data:
         """
 
         ## Returns the max value in the 250g array within the interval
-        max_250 = np.Max(self.g250g[start:end])
+        max_250 = np.max(self.g250g[start:end])
 
         ## Returns the max value in the 250g array within the interval
-        max_200 = np.Max(self.g200g[start:end])
+        max_200 = np.max(self.g200g[start:end])
 
         ## Based on the max value of the peak determine which column to use and how to offset the column
+        meter_to_analyze = self.g250g[start:end]
         if (max_250 > 200):
             meter_to_analyze = self.g250g[start:end]
         if (max_200 > 50):
