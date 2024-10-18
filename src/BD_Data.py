@@ -3,14 +3,13 @@ import matplotlib.pyplot as plt
 
 class BD_Data:
     def __init__(self, file_path, bdid=8):
-        self.get_from_file(file_path)
-        self.get_config_from_bdid(bdid)
+        self.set_data_from_file(file_path)
+        self.set_accelerometer_data_from_bdid(bdid)
         pass
 
-    def get_from_file(self, file_path):
+    def set_data_from_file(self, file_path):
         """
-        Retrieves data from a raw binary or a pre-processed .csv
-        
+        Retrieves data from a raw binary, errors on other file types        
         Parameters
         ---
         file_path: str
@@ -48,7 +47,7 @@ class BD_Data:
         else:
             raise Exception(f'Error: please select a file!')
 
-    def get_config_from_bdid(self, bdid):
+    def set_accelerometer_data_from_bdid(self, bdid):
         """
         Equivalent to gdata from BD_Inwater.m, converts data into SI units based on
         the blueDrop number and its associated calibration constants as well as the 
