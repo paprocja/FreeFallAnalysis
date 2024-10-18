@@ -30,6 +30,7 @@ def main():
 
     # print the numpy array to console
     bd_data.output()
+    bd_data.plot_initial_data()
 
 if __name__ == "__main__":
     main()

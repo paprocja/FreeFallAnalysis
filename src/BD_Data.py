@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class BD_Data:
     def __init__(self, file_path, bdid=8):
@@ -8,8 +9,7 @@ class BD_Data:
 
     def set_data_from_file(self, file_path):
         """
-        Retrieves data from a raw binary, errors on other file types
-        
+        Retrieves data from a raw binary, errors on other file types        
         Parameters
         ---
         file_path: str
@@ -154,3 +154,19 @@ class BD_Data:
         print(f'{self.gY55g = }')
         print(f'{self.g250g = }')
         print(f'{self.ppm = }')
+
+    def plot_initial_data(self):
+        plt.figure(figsize=(15,15))
+        
+        plt.plot(self.g2g, linestyle='-', label="g2g")
+        plt.plot(self.g18g, linestyle='-', label="g18g")
+        plt.plot(self.g50g, linestyle='-', label="g50g")
+        plt.plot(self.gX55g, linestyle='-', label="gx55g")
+        plt.plot(self.gY55g, linestyle='-', label="gy55g")
+        plt.plot(self.g250g, linestyle='-', label="g250g")
+        plt.legend(loc='upper right')
+
+        plt.xlabel('Steps', fontsize=15)
+        plt.ylabel('Deceleration (g)', fontsize=15)
+        plt.title('Initial Data Visualization', fontsize=15)
+        plt.show()
