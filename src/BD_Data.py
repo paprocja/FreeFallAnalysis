@@ -154,8 +154,6 @@ class BD_Data:
         peak = self.get_peak_for_meter(interval_start, interval_end)
 
         ## Plot peak so that user can select an x 
-        ## TODO 
-
         _, ax = plt.subplots()
 
         ax.plot(peak[interval_start:interval_end])
@@ -166,7 +164,6 @@ class BD_Data:
         return peak
     
     ## Returns the start and end of the interval that the peak is 
-    ## TODO this is copied from the script, make sure that this reliably surrounds the peak
     def get_peak_bounds(self, peak_center):
         """
         Gets the bounds for a peak.
