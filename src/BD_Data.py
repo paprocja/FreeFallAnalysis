@@ -1,14 +1,15 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class BD_Data:
     def __init__(self, file_path, bdid=8):
-        self.set_data_from_file(file_path)
-        self.set_accelerometer_data_from_bdid(bdid)
+        self.get_from_file(file_path)
+        self.get_config_from_bdid(bdid)
         pass
 
-    def set_data_from_file(self, file_path):
+    def get_from_file(self, file_path):
         """
-        Retrieves data from a raw binary, errors on other file types
+        Retrieves data from a raw binary or a pre-processed .csv
         
         Parameters
         ---
@@ -47,7 +48,7 @@ class BD_Data:
         else:
             raise Exception(f'Error: please select a file!')
 
-    def set_accelerometer_data_from_bdid(self, bdid):
+    def get_config_from_bdid(self, bdid):
         """
         Equivalent to gdata from BD_Inwater.m, converts data into SI units based on
         the blueDrop number and its associated calibration constants as well as the 
@@ -154,3 +155,19 @@ class BD_Data:
         print(f'{self.gY55g = }')
         print(f'{self.g250g = }')
         print(f'{self.ppm = }')
+
+    def plot_initial_data(self):
+        plt.figure(figsize=(15,15))
+        
+        plt.plot(self.g2g, linestyle='-', label="g2g")
+        plt.plot(self.g18g, linestyle='-', label="g18g")
+        plt.plot(self.g50g, linestyle='-', label="g50g")
+        plt.plot(self.gX55g, linestyle='-', label="gx55g")
+        plt.plot(self.gY55g, linestyle='-', label="gy55g")
+        plt.plot(self.g250g, linestyle='-', label="g250g")
+        plt.legend(loc='upper right')
+
+        plt.xlabel('Steps', fontsize=15)
+        plt.ylabel('Deceleration (g)', fontsize=15)
+        plt.title('Initial Data Visualization', fontsize=15)
+        plt.show()
