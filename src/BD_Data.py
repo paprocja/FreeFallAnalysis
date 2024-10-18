@@ -183,7 +183,7 @@ class BD_Data:
             return peak_center - 1500, peak_center + 500
 
     ## Gets offset for a meter based on the meter and end value
-    def get_meter_offset(self, meter, end):
+    def get_meter_offset(self, meter, start, end):
         """
         Gets the meter offset for a specific meter
 
@@ -198,6 +198,10 @@ class BD_Data:
                 the offset for a specific meter's data and interval
 
         """
+        # if at the end of the graph return values before the interval
+        if end + 2000 > len(meter):
+            return np.mean(meter[start - 2000:start - 1000])
+
         return np.mean(meter[end + 1000:end + 2000])
         
     ## Gets a column (meter) from the matrix based off the magnitude of the peak, centers the column around 0
@@ -225,7 +229,7 @@ class BD_Data:
 
         ## Based on the max value of the peak determine which column to use and how to offset the column
         meter_to_analyze = self.g250g
-        
+
         if (max_250 > 200):
             meter_to_analyze = self.g250g
         if (max_200 > 50):
@@ -239,7 +243,7 @@ class BD_Data:
         print(meter_to_analyze)
 
         ## Get the offset for the specific meter
-        offset = self.get_meter_offset(meter_to_analyze, end)
+        offset = self.get_meter_offset(meter_to_analyze, start, end)
 
         ## Apply the offset to the data and return
         return meter_to_analyze - offset
