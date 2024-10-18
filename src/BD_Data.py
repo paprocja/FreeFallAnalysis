@@ -239,9 +239,6 @@ class BD_Data:
         if (max_200 > 1.7):
             meter_to_analyze = self.g18g
 
-        print("METER: \n")
-        print(meter_to_analyze)
-
         ## Get the offset for the specific meter
         offset = self.get_meter_offset(meter_to_analyze, start, end)
 
