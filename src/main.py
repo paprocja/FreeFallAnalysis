@@ -28,7 +28,7 @@ def main():
 
     save_to_csv()
 
-    bd_data.display_peak(24095)
+    bd_data.display_peak(24905)
 
     # print the numpy array to console
     bd_data.output()

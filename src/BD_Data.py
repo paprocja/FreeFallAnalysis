@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class BD_Data:
     def __init__(self, file_path, bdid=8):
@@ -155,6 +156,13 @@ class BD_Data:
         ## Plot peak so that user can select an x 
         ## TODO 
 
+        _, ax = plt.subplots()
+
+        ax.plot(peak[interval_start:interval_end])
+
+        #plt.xlim(interv0al_start, interval_end)
+        
+        plt.show()
         return peak
     
     ## Returns the start and end of the interval that the peak is 
@@ -229,15 +237,18 @@ class BD_Data:
 
         ## Based on the max value of the peak determine which column to use and how to offset the column
         meter_to_analyze = self.g250g
-
+        print(max_250)
+        print(max_200)
         if (max_250 > 200):
             meter_to_analyze = self.g250g
-        if (max_200 > 50):
+        elif (max_200 > 50):
             meter_to_analyze = self.g200g
-        if (max_200 > 18):
+        elif (max_200 > 18):
             meter_to_analyze = self.g50g
-        if (max_200 > 1.7):
+        elif (max_200 > 1.7):
             meter_to_analyze = self.g18g
+        else:
+            meter_to_analyze = self.g2g
 
         ## Get the offset for the specific meter
         offset = self.get_meter_offset(meter_to_analyze, start, end)
