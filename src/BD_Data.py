@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
-import threading
 
 class BD_Data:
     def __init__(self, file_path, bdid=8):
