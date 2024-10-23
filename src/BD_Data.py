@@ -39,7 +39,8 @@ class BD_Data:
                     int32_data[int32_data >= 2**23] -= 2**24
 
                     # Reshape the data into the desired matrix
-                    raw_data = int32_data.reshape(120000, 10)
+                    array_size = (int)(int32_data.size / 10)
+                    raw_data = int32_data.reshape(array_size, 10)
 
                     self.data = raw_data
             else:
@@ -249,7 +250,7 @@ class BD_Data:
         if peak_center <= 1500:
             return 1, peak_center + 500
         elif peak_center > 119500:
-            return peak_center - 1500, 120000
+            return peak_center - 1500, self.data.size
         else:
             return peak_center - 1500, peak_center + 500
 
