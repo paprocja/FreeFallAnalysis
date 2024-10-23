@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import find_peaks
 
 class BD_Data:
     def __init__(self, file_path, bdid=8):
@@ -18,7 +19,6 @@ class BD_Data:
         Assigns
         ---
         self.data: 32 bit integer data
-        
         """
         if file_path:
             if '.csv' in file_path:
@@ -133,16 +133,81 @@ class BD_Data:
             case _:
                 raise Exception(f'Unknown Blue Drop #{bdid}')
 
+
+    def findpeaks(self):
+        """
+        Finds peaks within g250g! Similar to matlab function
+        Peaks increase by a height of 5 and are at least 
+        "1 second" away from another (2000 distance)
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        peaks: List[int]
+            X values of each peak
+        heights: List[int]
+            Y values of each peak
+        """
+        peaks, heights = find_peaks(self.g250g, height=5, distance=2000)
+        if len(peaks) > 0:
+            heights = heights['peak_heights']
+        else:
+            heights = []
+        return peaks, heights
+    
+    def display_initial_data(self, peaks, heights, num_peaks):
+        """
+        Displays initial data and peaks
+
+        Parameters
+        ----------
+        peaks: List[int]
+            x values of peaks
+        heights: List[int]
+            y values of peaks
+        num_peaks: int
+            len(peaks) as it is called elsewhere        
+        """
+        # establish plot and axis
+        fig, ax = plt.subplots(figsize=(12, 6))
+
+        # plot vertical accelerometer data
+        ax.plot(self.g2g, linestyle='-', linewidth=.5, label="g2g", color='green')
+        ax.plot(self.g18g, linestyle='-', linewidth=.5, label="g18g", color='red')
+        ax.plot(self.g50g, linestyle='-', linewidth=.5, label="g50g", color='blue')
+        ax.plot(self.g250g, linestyle='-', linewidth=.5, label="g250g", color='purple')
+        # plot peaks as stars
+        ax.scatter(peaks, heights, marker='*', label='peaks', color='black')
+
+        # label peaks with selection numbers
+        for i, txt in enumerate(range(1, num_peaks+1)):
+            plt.annotate(txt, (peaks[i], heights[i]), xytext=(5,5), textcoords='offset points',
+                            ha='center', va='bottom', bbox=dict(boxstyle='round,pad=0.5', fc='blue', alpha=0.5),
+                        arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.2"))
+
+        # label legend, axis, title
+        ax.legend(loc='upper right')
+        ax.set_xlabel('Steps', fontsize=15)
+        ax.set_ylabel('Deceleration (g)', fontsize=15)
+        ax.set_title('Initial Data Visualization', fontsize=15)
+        plt.tight_layout()
+        plt.show()
+
     def display_peak(self, peak_center):
         """
         Displays a plot of a peak so that a user can determine which spike they want within the pea
         The return will be integrated over the interval spike selection to y = 1
 
         Parameters
-            peak_center: int
-                the location of the center of the peak
+        ----------
+        peak_center: int
+            the location of the center of the peak
         
         Returns
+        -------
             numpy array that contains the peak offset around 1 for the relevant meter
 
         """
@@ -168,14 +233,16 @@ class BD_Data:
         Gets the bounds for a peak.
 
         Parameters
-            peak_center: int
-                the location of the center of the peak
+        ----------
+        peak_center: int
+            the location of the center of the peak
         
-        Return
-            int:
-                the start of the interval
-            int:
-                the end of the interval
+        Returns
+        -------
+        int:
+            the start of the interval
+        int:
+            the end of the interval
 
         """
                 
@@ -192,14 +259,16 @@ class BD_Data:
         Gets the meter offset for a specific meter
 
         Parameters
-            meter: numpy array
-                the numpy array which the offset will be calculated off of
-            end: int
-                the end value of the interval
+        ----------
+        meter: numpy array
+            the numpy array which the offset will be calculated off of
+        end: int
+            the end value of the interval
         
         Return
-            float:
-                the offset for a specific meter's data and interval
+        ------
+        float:
+            the offset for a specific meter's data and interval
 
         """
         # if at the end of the graph return values before the interval
@@ -214,14 +283,16 @@ class BD_Data:
         Gets the peak that can be displayed and integrated.
 
         Parameters
-            start: int
-                the start of the interval to display
-            end: int
-                the end of the interval to display
+        ----------
+        start: int
+            the start of the interval to display
+        end: int
+            the end of the interval to display
         
-        Return
-            numpy array:
-                an array of offset data for a specific meter over an interval
+        Returns
+        -------
+        numpy array:
+            an array of offset data for a specific meter over an interval
 
         """
 
@@ -265,19 +336,3 @@ class BD_Data:
         print(f'{self.gY55g = }')
         print(f'{self.g250g = }')
         print(f'{self.ppm = }')
-
-    def plot_initial_data(self):
-        plt.figure(figsize=(15,15))
-        
-        plt.plot(self.g2g, linestyle='-', label="g2g")
-        plt.plot(self.g18g, linestyle='-', label="g18g")
-        plt.plot(self.g50g, linestyle='-', label="g50g")
-        plt.plot(self.gX55g, linestyle='-', label="gx55g")
-        plt.plot(self.gY55g, linestyle='-', label="gy55g")
-        plt.plot(self.g250g, linestyle='-', label="g250g")
-        plt.legend(loc='upper right')
-
-        plt.xlabel('Steps', fontsize=15)
-        plt.ylabel('Deceleration (g)', fontsize=15)
-        plt.title('Initial Data Visualization', fontsize=15)
-        plt.show()
