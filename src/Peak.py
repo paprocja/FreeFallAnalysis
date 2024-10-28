@@ -8,6 +8,8 @@ class Peak:
     def __init__(self, peak_center, BD):
         self.peak_center = peak_center
         self.BD = BD
+        self.start = 0
+        self.end = 0
         pass
 
     def display_peak(self):
@@ -21,15 +23,15 @@ class Peak:
 
         """
         ## Get an interval around the center of the peak
-        interval_start, interval_end = self.get_peak_bounds()
+        self.get_peak_bounds()
 
         ## Get an array that represents the data in the peak for the relevant meter
-        peak = self.get_peak_for_meter(interval_start, interval_end)
+        peak = self.get_peak_for_meter()
 
         ## Plot peak so that user can select an x 
         _, ax = plt.subplots()
 
-        ax.plot(peak[interval_start:interval_end])
+        ax.plot(peak[self.start:self.end])
 
         #plt.xlim(interv0al_start, interval_end)
         
@@ -54,16 +56,18 @@ class Peak:
             the end of the interval
 
         """
-                
         if self.peak_center <= 1500:
-            return 1, self.peak_center + 500
+            self.start = 1
+            self.end = self.peak_center + 500
         elif self.peak_center > 119500:
-            return self.peak_center - 1500, self.data.size
+            self.start = self.peak_center - 1500
+            self.end = self.BD.data.size
         else:
-            return self.peak_center - 1500, self.peak_center + 500
+            self.start = self.peak_center - 1500
+            self.end = self.peak_center + 500
 
     ## Gets offset for a meter based on the meter and end value
-    def get_meter_offset(self, meter, start, end):
+    def get_meter_offset(self, meter):
         """
         Gets the meter offset for a specific meter
 
@@ -81,13 +85,13 @@ class Peak:
 
         """
         # if at the end of the graph return values before the interval
-        if end + 2000 > len(meter):
-            return np.mean(meter[start - 2000:start - 1000])
+        if self.end + 2000 > len(meter):
+            return np.mean(meter[self.start - 2000:self.start - 1000])
 
-        return np.mean(meter[end + 1000:end + 2000])
+        return np.mean(meter[self.end + 1000:self.end + 2000])
         
     ## Gets a column (meter) from the matrix based off the magnitude of the peak, centers the column around 0
-    def get_peak_for_meter(self, start, end):
+    def get_peak_for_meter(self):
         """
         Gets the peak that can be displayed and integrated.
 
@@ -106,10 +110,10 @@ class Peak:
         """
 
         ## Returns the max value in the 250g array within the interval
-        max_250 = np.max(self.BD.g250g[start:end])
+        max_250 = np.max(self.BD.g250g[self.start:self.end])
 
         ## Returns the max value in the 250g array within the interval
-        max_200 = np.max(self.BD.g200g[start:end])
+        max_200 = np.max(self.BD.g200g[self.start:self.end])
 
         ## Based on the max value of the peak determine which column to use and how to offset the column
         if (max_250 > 200):
@@ -124,7 +128,10 @@ class Peak:
             meter_to_analyze = self.BD.g2g.copy()
 
         ## Get the offset for the specific meter
-        offset = self.get_meter_offset(meter_to_analyze, start, end)
+        offset = self.get_meter_offset(meter_to_analyze)
 
         ## Apply the offset to the data and return
         return meter_to_analyze - offset
+
+    def is_valid_spike(self, spike):
+        return True

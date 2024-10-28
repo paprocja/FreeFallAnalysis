@@ -155,10 +155,27 @@ class BD_Data:
         peaks, heights = find_peaks(self.g250g, height=5, distance=2000)
         if len(peaks) > 0:
             heights = heights['peak_heights']
+            self.number_peaks = len(peaks)
         else:
             heights = []
+            self.number_peaks = 0
+            
         return peaks, heights
     
+    def is_valid_peak(self, selected_peak):
+        """
+        Returns if a selected peak is within the range of peaks.
+
+        Parameters
+        ----------
+        selected_peak: int
+        The peak input by a user that needs to be validated
+        """
+        if selected_peak - 1 in range(0, self.number_peaks):
+            return True
+        else:
+            return False
+
     def display_initial_data(self, peaks, heights, num_peaks):
         """
         Displays initial data and peaks
