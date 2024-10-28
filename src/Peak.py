@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import find_peaks
 
 # Represents a peak where the penetrometer has hit the ground
 class Peak:
