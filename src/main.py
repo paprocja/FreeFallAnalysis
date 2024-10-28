@@ -4,6 +4,7 @@ import os
 import threading
 from queue import Queue
 from BD_Data import BD_Data
+from Peak import Peak
 
 # TODO look into making this not a global variable
 # may be a necessity because UI might be able to return a value
@@ -85,8 +86,9 @@ def main():
     bd_data.display_initial_data(peaks, heights, num_peaks)
     
     # Retrieves the selected peak and displays it
-    selected_peak = selection_results.get()
-    bd_data.display_peak(peaks[selected_peak])
+    selected_peak_number = selection_results.get()
+    selected_peak = Peak(peaks[selected_peak_number], bd_data)
+    selected_peak.display_peak()
 
 if __name__ == "__main__":
     main()
