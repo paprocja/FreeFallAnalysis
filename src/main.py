@@ -11,6 +11,9 @@ from Peak import Peak
 # BD_Data object with parsed data from binary file
 bd_data = None
 
+# thread-safe data structure for return value
+selection_results = Queue()
+
 def on_select_file(file_path, bdid):
     """
     Creates a BD_Data object from the selected file    
@@ -30,33 +33,81 @@ def save_to_csv():
     else:
         bd_data.save_data("output/F_Matrix.csv")
 
-def prompt_user_for_peak(num_peaks, selection_results):
+def prompt_user_for_int(selection_results, input_msg, output_msg, is_valid):
     """
-    Prompts the user to select a peak. Designed to be run as a thread.
-    Will continue to ask user for input until a valid peak is selected.
+    Prompts the user for an interger. Designed to be run as a thread.
+    Will continue to ask user for input until a valid integer is input.
 
     Parameters
     ----------
-    num_peaks: int
-        Number of peaks to select from
     selection_resuls: Queue
         Thread-safe data structure to return selected peak to main thread
+    input_msg: f string
+        The prompt displayed to the user asking for input
+    output_msg: f string
+        The prompt displayed to the user after valid input is entered
+    is_valid: function
+        A function that returns true if the input is valid
     """
     invalid = True
     while invalid:
         # prompt user to select peaks
-        selection = input(f"Select a peak (1, ..., {num_peaks}):\n")
+        selection = input(input_msg)
         # attempt to convert input to an integer
         try:
-            selected_peak = int(selection) - 1
-            if selected_peak in range(0, num_peaks):
+            selection = int(selection)
+            if is_valid(selection):
                 invalid = False
-                selection_results.put(selected_peak)
-                print("Please close the figure to see the selected plot.")
+                selection_results.put(selection)
+                print(output_msg)
             else:
                 print(f'{selection} is not a valid choice!')
         except Exception as _:
             print(f'{selection} is not a valid integer!')
+
+def get_peak_number(peaks, heights, num_peaks):
+    """
+    Gets a number of a peak that will be analyzed.
+
+    Parameters
+    ----------
+    peaks : List[int]
+    x values of peaks
+
+    heights : List[int]
+    y values of peaks
+
+    num_peaks : int
+    len(peaks) as it is called elsewhere
+    """
+    # Prompts user to select a peak
+    selection_thread = threading.Thread(target=lambda: prompt_user_for_int(selection_results, f"Select a peak (1, ..., {num_peaks}):\n", f"Please close the figure to see the selected plot.\n", bd_data.is_valid_peak))
+    selection_thread.start()
+
+    # Displays initial data and peaks
+    bd_data.display_initial_data(peaks, heights, num_peaks)
+
+    # Return the selected peak and adjust for 0 index
+    return selection_results.get() - 1
+
+def get_spike(selected_peak):
+    """
+    Gets a spike from a user based off the graph of the peak.
+
+    Parameters
+    ----------
+    selected_peak: Peak
+    The peak to be graphed
+    """
+    # Start a UI thread to get spike number from user
+    selection_thread = threading.Thread(target=lambda: prompt_user_for_int(selection_results, f"Select a spike within the peak:\n", "Please close the figure to see the integration graphs.\n", selected_peak.is_valid_spike))
+    selection_thread.start()
+
+    # Displays the peak
+    selected_peak.display_peak()
+
+    # Return the selected spike
+    return selection_results.get()
 
 def main():
     # Creates the file selection ui, passing in command to be executed when button is clicked
@@ -76,19 +127,16 @@ def main():
     # print out peak x and y values
     print(f'x values: {peaks}')
     print(f'y values: {heights}')
-    
-    # Prompts user to select a peak
-    selection_results = Queue() # thread-safe data structure for return value
-    selection_thread = threading.Thread(target=lambda: prompt_user_for_peak(num_peaks, selection_results))
-    selection_thread.start()
 
-    # Displays initial data and peaks
-    bd_data.display_initial_data(peaks, heights, num_peaks)
-    
-    # Retrieves the selected peak and displays it
-    selected_peak_number = selection_results.get()
+    selected_peak_number = get_peak_number(peaks, heights, num_peaks)
+
+    # Create a peak based off the x value of the peak
     selected_peak = Peak(peaks[selected_peak_number], bd_data)
-    selected_peak.display_peak()
+    
+    selected_spike = get_spike(selected_peak)
+
+    print(f'Selected spike: {selected_spike}')
+
 
 if __name__ == "__main__":
     main()
