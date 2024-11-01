@@ -4,8 +4,12 @@ from scipy.signal import find_peaks
 
 class BD_Data:
     def __init__(self, file_path, bdid=8):
+        self.number_peaks = 0
+        self.peaks = []
+        self.heights = []
         self.set_data_from_file(file_path)
         self.set_accelerometer_data_from_bdid(bdid)
+        self.findpeaks()
         pass
 
     def set_data_from_file(self, file_path):
@@ -147,20 +151,12 @@ class BD_Data:
 
         Returns
         -------
-        peaks: List[int]
-            X values of each peak
-        heights: List[int]
-            Y values of each peak
         """
         peaks, heights = find_peaks(self.g250g, height=5, distance=2000)
         if len(peaks) > 0:
-            heights = heights['peak_heights']
+            self.heights = heights['peak_heights']
+            self.peaks = peaks
             self.number_peaks = len(peaks)
-        else:
-            heights = []
-            self.number_peaks = 0
-            
-        return peaks, heights
     
     def is_valid_peak(self, selected_peak):
         """
@@ -176,7 +172,7 @@ class BD_Data:
         else:
             return False
 
-    def display_initial_data(self, peaks, heights, num_peaks):
+    def display_initial_data(self):
         """
         Displays initial data and peaks
 
@@ -185,9 +181,7 @@ class BD_Data:
         peaks: List[int]
             x values of peaks
         heights: List[int]
-            y values of peaks
-        num_peaks: int
-            len(peaks) as it is called elsewhere        
+            y values of peaks       
         """
         # establish plot and axis
         fig, ax = plt.subplots(figsize=(12, 6))
@@ -198,11 +192,11 @@ class BD_Data:
         ax.plot(self.g50g, linestyle='-', linewidth=.5, label="g50g", color='blue')
         ax.plot(self.g250g, linestyle='-', linewidth=.5, label="g250g", color='purple')
         # plot peaks as stars
-        ax.scatter(peaks, heights, marker='*', label='peaks', color='black')
+        ax.scatter(self.peaks, self.heights, marker='*', label='peaks', color='black')
 
         # label peaks with selection numbers
-        for i, txt in enumerate(range(1, num_peaks+1)):
-            plt.annotate(txt, (peaks[i], heights[i]), xytext=(5,5), textcoords='offset points',
+        for i, txt in enumerate(range(1, self.number_peaks+1)):
+            plt.annotate(txt, (self.peaks[i], self.heights[i]), xytext=(5,5), textcoords='offset points',
                             ha='center', va='bottom', bbox=dict(boxstyle='round,pad=0.5', fc='blue', alpha=0.5),
                         arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.2"))
 

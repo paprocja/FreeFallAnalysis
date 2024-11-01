@@ -6,7 +6,7 @@ class Peak:
     #peak_center is the x cordinate of the center of the peak
     #BD is a bd_data object that the peak is within
     def __init__(self, peak_center, BD):
-        self.peak_center = peak_center
+        self.peak_center = BD.peaks[peak_center]
         self.BD = BD
         self.start = 0
         self.end = 0
@@ -56,20 +56,23 @@ class Peak:
             the end of the interval
 
         """
+        # Peak is close to the start of file
         if self.peak_center <= 1500:
             self.start = 1
             self.end = self.peak_center + 500
+        # Peak is in the middle of file
         elif self.peak_center > 119500:
             self.start = self.peak_center - 1500
             self.end = self.BD.data.size
+        # Peak is close to the end of file
         else:
             self.start = self.peak_center - 1500
             self.end = self.peak_center + 500
 
-    ## Gets offset for a meter based on the meter and end value
     def get_meter_offset(self, meter):
         """
         Gets the meter offset for a specific meter
+        The values need to be offset so the peak starts to increase around 0, helping with integration
 
         Parameters
         ----------
@@ -90,10 +93,11 @@ class Peak:
 
         return np.mean(meter[self.end + 1000:self.end + 2000])
         
-    ## Gets a column (meter) from the matrix based off the magnitude of the peak, centers the column around 0
     def get_peak_for_meter(self):
         """
         Gets the peak that can be displayed and integrated.
+        A column (meter) from the matrix based off the magnitude of the peak, centers the column around 0
+
 
         Parameters
         ----------
@@ -133,5 +137,6 @@ class Peak:
         ## Apply the offset to the data and return
         return meter_to_analyze - offset
 
+    # TODO figure out what valid means
     def is_valid_spike(self, spike):
         return True
