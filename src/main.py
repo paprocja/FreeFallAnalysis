@@ -79,7 +79,8 @@ def get_peak_number():
     int: The peak selected by the user
     """
     # Prompts user to select a peak
-    selection_thread = threading.Thread(target=lambda: prompt_user_for_int(selection_results, f"Select a peak (1, ..., {bd_data.number_peaks}):\n", f"Please close the figure to see the selected plot.\n", bd_data.is_valid_peak))
+    options = [i+1 for i in range(bd_data.number_peaks)]
+    selection_thread = threading.Thread(target=lambda: prompt_user_for_int(selection_results, f"Select a peak {options}:\n", f"Please close the figure to see the selected plot.\n", bd_data.is_valid_peak))
     selection_thread.start()
 
     # Displays initial data and peaks
