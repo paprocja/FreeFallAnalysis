@@ -47,6 +47,7 @@ class Peak:
 
         self._copy_from_BD_data(BD)    
         self._set_peak(BD)
+        self._find_end_of_drop()
 
     def _copy_from_BD_data(self, BD):
         # copies data from the BD_data object
@@ -56,6 +57,10 @@ class Peak:
         self.g50g = BD.g50g[self.start:self.end].copy()
         self.g18g = BD.g18g[self.start:self.end].copy()
         self.g2g = BD.g2g[self.start:self.end].copy()
+        # Grabs the x,y values of the peak. 
+        # Offsets the x value to be in terms of the peak.
+        self.peak_height = BD.g250g[self.peak_center].copy()
+        self.peak_center = self.peak_center - self.start
 
     def _set_peak(self, BD):
         """
@@ -96,10 +101,8 @@ class Peak:
             spliced_meter = self.g250g.copy()
             meter_to_analyze = BD.g2g.copy()
 
-        # Offsets the y-values of the meter for integration
-        offset = self._get_meter_offset(meter_to_analyze)
-        
-        # Stores the peak 
+        # Stores the peak as an array offset for integration
+        offset = self._get_meter_offset(meter_to_analyze)        
         self.peak = spliced_meter - offset
 
     def _get_meter_offset(self, meter):
@@ -124,12 +127,30 @@ class Peak:
             return np.mean(meter[self.start - 2000:self.start - 1000])
         return np.mean(meter[self.end + 1000:self.end + 2000])
 
+    def _find_end_of_drop(self):
+        """
+        TODO 
+        Need see if this code can be cleaned up. Right now this is just the
+        same functinoality that the matlab script had for `findent2`. 
+        Not sure if its accounting for some edge case but seems extra, looks like
+        we could just use num1? We're looping from peak to end of it, so its only 
+        going down?
+        """
+        for i in range(self.peak_center, self.end):
+            if self.peak[i] <= 0:
+                num1 = i
+                num2 = i-1
+                break
+        self.end_of_drop = num1 if abs(num1) < abs(num2) else num2
+
     def display_peak(self):
         """
         Displays a plot of a peak
         """
         _, ax = plt.subplots()
         ax.plot(self.peak)
+        ax.plot(self.g2g)
+        ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
         plt.show()
 
     def is_valid_spike(self, spike):
@@ -140,3 +161,16 @@ class Peak:
         - If not a good selection, provide suggestions
         """
         return True
+    
+
+    
+    def integrate_acceleration(self):
+        """
+        Uses accelerometer data and selection of the spike to integrate for velocity and depth
+
+        Parameters
+        ----------
+
+        """
+        # finds the end of the drop (starting point for integration) where acceleration = 1g
+        
