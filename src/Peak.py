@@ -6,137 +6,137 @@ class Peak:
     #peak_center is the x cordinate of the center of the peak
     #BD is a bd_data object that the peak is within
     def __init__(self, peak_center, BD):
-        self.peak_center = BD.peaks[peak_center]
-        self.BD = BD
-        self.start = 0
-        self.end = 0
-        pass
-
-    def display_peak(self):
         """
-        Displays a plot of a peak so that a user can determine which spike they want within the pea
-        The return will be integrated over the interval spike selection to y = 1
-        
-        Returns
-        -------
-            numpy array that contains the peak offset around 1 for the relevant meter
-
-        """
-        ## Get an interval around the center of the peak
-        self.get_peak_bounds()
-
-        ## Get an array that represents the data in the peak for the relevant meter
-        peak = self.get_peak_for_meter()
-
-        ## Plot peak so that user can select an x 
-        _, ax = plt.subplots()
-
-        ax.plot(peak[self.start:self.end])
-
-        #plt.xlim(interv0al_start, interval_end)
-        
-        plt.show()
-        return peak
-    
-    ## Returns the start and end of the interval that the peak is 
-    def get_peak_bounds(self):
-        """
-        Gets the bounds for a peak.
+        Constructor for Peak object
 
         Parameters
         ----------
         peak_center: int
-            the location of the center of the peak
-        
-        Returns
+            x value of the highest point of the peak
+        BD: BD_Data
+            BD data object from which the peak comes from
+
+        Assigns
         -------
-        int:
-            the start of the interval
-        int:
-            the end of the interval
+        self.peak_center: int
+            y-value or max height of peak
+        self.start: int
+            x-value for start of peak within BD_data object
+        self.end: int
+            x-value for end of peak within BD_data object
 
+        self.data, self.g250g, self.g200g, self.g50g, self.g18g, self.g2g:
+            Cut copies of accelerometer/raw data of peak from BD_Data
         """
-        # Peak is close to the start of file
+        # grabs max height of peak
+        self.peak_center = BD.peaks[peak_center]
+        
+        # determines bounds of peak to copy data from
         if self.peak_center <= 1500:
-            self.start = 1
+            # Peak is at the beginning of the file
+            self.start = 0
             self.end = self.peak_center + 500
-        # Peak is in the middle of file
         elif self.peak_center > 119500:
+            # Peak is in the middle of file
             self.start = self.peak_center - 1500
-            self.end = self.BD.data.size
-        # Peak is close to the end of file
+            self.end = BD.data.size
         else:
+            # Peak is close to the end of file
             self.start = self.peak_center - 1500
             self.end = self.peak_center + 500
 
-    def get_meter_offset(self, meter):
+        self._copy_from_BD_data(BD)    
+        self._set_peak(BD)
+
+    def _copy_from_BD_data(self, BD):
+        # copies data from the BD_data object
+        self.data = BD.data[self.start:self.end].copy()
+        self.g250g = BD.g250g[self.start:self.end].copy()
+        self.g200g = BD.g200g[self.start:self.end].copy()
+        self.g50g = BD.g50g[self.start:self.end].copy()
+        self.g18g = BD.g18g[self.start:self.end].copy()
+        self.g2g = BD.g2g[self.start:self.end].copy()
+
+    def _set_peak(self, BD):
         """
-        Gets the meter offset for a specific meter
-        The values need to be offset so the peak starts to increase around 0, helping with integration
+        Sets the peak that can be displayed and integrated.
+        A column (meter) from the matrix based off the magnitude of the peak, centers the column around 0
+
+        Parameters
+        ----------
+        BD: BD_Data
+            The data the peak comes from
+        
+        Assigns
+        -------
+        self.peak: numpy array
+            an array of offset data for a specific meter over an interval
+        """
+
+        # Returns the max value in the 250g array within the interval
+        max_250 = np.max(self.g250g)
+
+        # Returns the max value in the 250g array within the interval
+        max_200 = np.max(self.g200g)
+
+        # Based on the max value of the peak determine which accelerometer to use for the peak
+        if (max_250 > 200):
+            spliced_meter = self.g250g.copy()
+            meter_to_analyze = BD.g250g.copy()
+        elif (max_200 > 50):
+            spliced_meter = self.g250g.copy()
+            meter_to_analyze = BD.g200g.copy()
+        elif (max_200 > 18):
+            spliced_meter = self.g250g.copy()
+            meter_to_analyze = BD.g50g.copy()
+        elif (max_200 > 1.7):
+            spliced_meter = self.g250g.copy()
+            meter_to_analyze = BD.g18g.copy()
+        else:
+            spliced_meter = self.g250g.copy()
+            meter_to_analyze = BD.g2g.copy()
+
+        # Offsets the y-values of the meter for integration
+        offset = self._get_meter_offset(meter_to_analyze)
+        
+        # Stores the peak 
+        self.peak = spliced_meter - offset
+
+    def _get_meter_offset(self, meter):
+        """
+        Should only be called from within Peak
+        Gets the y-value offset for a particular meter.
+        The values need to be offset so the peak starts to increase around 0 for integration
 
         Parameters
         ----------
         meter: numpy array
             the numpy array which the offset will be calculated off of
-        end: int
-            the end value of the interval
-        
+
         Return
         ------
-        float:
-            the offset for a specific meter's data and interval
-
+        float
+            the y offset for a specific meter's data and interval
         """
-        # if at the end of the graph return values before the interval
+
         if self.end + 2000 > len(meter):
+            # if at the end of the graph, return values before the interval
             return np.mean(meter[self.start - 2000:self.start - 1000])
-
         return np.mean(meter[self.end + 1000:self.end + 2000])
-        
-    def get_peak_for_meter(self):
+
+    def display_peak(self):
         """
-        Gets the peak that can be displayed and integrated.
-        A column (meter) from the matrix based off the magnitude of the peak, centers the column around 0
-
-
-        Parameters
-        ----------
-        start: int
-            the start of the interval to display
-        end: int
-            the end of the interval to display
-        
-        Returns
-        -------
-        numpy array:
-            an array of offset data for a specific meter over an interval
-
+        Displays a plot of a peak
         """
+        _, ax = plt.subplots()
+        ax.plot(self.peak)
+        plt.show()
 
-        ## Returns the max value in the 250g array within the interval
-        max_250 = np.max(self.BD.g250g[self.start:self.end])
-
-        ## Returns the max value in the 250g array within the interval
-        max_200 = np.max(self.BD.g200g[self.start:self.end])
-
-        ## Based on the max value of the peak determine which column to use and how to offset the column
-        if (max_250 > 200):
-            meter_to_analyze = self.BD.g250g.copy()
-        elif (max_200 > 50):
-            meter_to_analyze = self.BD.g200g.copy()
-        elif (max_200 > 18):
-            meter_to_analyze = self.BD.g50g.copy()
-        elif (max_200 > 1.7):
-            meter_to_analyze = self.BD.g18g.copy()
-        else:
-            meter_to_analyze = self.BD.g2g.copy()
-
-        ## Get the offset for the specific meter
-        offset = self.get_meter_offset(meter_to_analyze)
-
-        ## Apply the offset to the data and return
-        return meter_to_analyze - offset
-
-    # TODO figure out what valid means
     def is_valid_spike(self, spike):
+        """
+        TODO
+        Currently everything is a valid spike. Ideas:
+        - Check spike is not cut off by start/end of file
+        - If not a good selection, provide suggestions
+        """
         return True
