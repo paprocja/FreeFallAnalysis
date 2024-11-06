@@ -140,3 +140,75 @@ class Peak:
     # TODO figure out what valid means
     def is_valid_spike(self, spike):
         return True
+
+    def find_area(self, tip_type='c', a_type='p', depth, tip_length=7.87):
+        """
+        Parameters
+        ----------
+        tip_type: str 
+            Type of the tip ('c', 'b', or 'p')
+        a_type: str 
+            Area type ('m' or 'p')
+        depth: numpy array
+            Array of depth values
+        tip_length: float
+            Length of the tip
+        
+        Return
+        ------
+        numpy array 
+            Area values for each depth
+        """
+        
+        depth_cm = np.array(depth) * 100  # Convert depth to cm
+        A1 = np.zeros(len(depth_cm))
+        r = np.zeros(len(depth_cm))
+        
+        for k in range(len(depth_cm)):
+            if tip_type == 'c':
+                if a_type == 'm':
+                    if depth_cm[k] < tip_length:
+                        r[k] = depth_cm[k] * np.tan(np.radians(30))
+                        A1[k] = np.pi * r[k] * (np.sqrt((r[k]**2) + (depth_cm[k]**2)))
+                    else:
+                        r[k] = 4.375
+                        A1[k] = np.pi * r[k] * (np.sqrt((r[k]**2) + (tip_length**2)))
+                elif a_type == 'p':
+                    if depth_cm[k] < tip_length:
+                        r[k] = depth_cm[k] * np.tan(np.radians(30))
+                        A1[k] = np.pi * r[k]**2
+                    else:
+                        r[k] = 4.375
+                        A1[k] = np.pi * r[k]**2
+            
+            elif tip_type == 'b':
+                if a_type == 'm':
+                    r[k] = 4.375
+                    if depth_cm[k] < tip_length:
+                        A1[k] = np.pi * r[k]**2 + 2 * np.pi * r[k] * depth_cm[k]
+                    else:
+                        A1[k] = np.pi * r[k]**2 + 2 * np.pi * r[k] * tip_length
+                elif a_type == 'p':
+                    A1[k] = np.pi * 4.375**2
+            
+            elif tip_type == 'p':
+                if a_type == 'm':
+                    if depth_cm[k] < tip_length:
+                        r[k] = np.sqrt(2.4184 * depth_cm[k])
+                    else:
+                        r[k] = 4.375
+                    
+                    polarfun = lambda theta, r: r * np.sqrt(0.745 * r**2 + 1)
+                    A1[k], _ = dblquad(polarfun, 0, 2 * np.pi, lambda _: 0, lambda _: r[k])
+                
+                elif a_type == 'p':
+                    if depth_cm[k] < tip_length:
+                        r[k] = np.sqrt(2.4184 * depth_cm[k])
+                        A1[k] = np.pi * r[k]**2
+                    else:
+                        r[k] = 4.375
+                        A1[k] = np.pi * r[k]**2
+            
+            A1[k] = A1[k] / 10000  # Convert area to square meters
+        
+        return A1
