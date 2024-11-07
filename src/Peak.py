@@ -89,16 +89,16 @@ class Peak:
             spliced_meter = self.g250g.copy()
             meter_to_analyze = BD.g250g.copy()
         elif (max_200 > 50):
-            spliced_meter = self.g250g.copy()
+            spliced_meter = self.g200g.copy()
             meter_to_analyze = BD.g200g.copy()
         elif (max_200 > 18):
-            spliced_meter = self.g250g.copy()
+            spliced_meter = self.g50g.copy()
             meter_to_analyze = BD.g50g.copy()
         elif (max_200 > 1.7):
-            spliced_meter = self.g250g.copy()
+            spliced_meter = self.g18g.copy()
             meter_to_analyze = BD.g18g.copy()
         else:
-            spliced_meter = self.g250g.copy()
+            spliced_meter = self.g2g.copy()
             meter_to_analyze = BD.g2g.copy()
 
         # Stores the peak as an array offset for integration
@@ -161,8 +161,6 @@ class Peak:
         - If not a good selection, provide suggestions
         """
         return True
-    
-
     
     def integrate_acceleration(self):
         """
