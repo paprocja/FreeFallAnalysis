@@ -141,16 +141,16 @@ class Peak:
     def is_valid_spike(self, spike):
         return True
 
-    def find_area(self, tip_type='c', a_type='p', depth, tip_length=7.87):
+    def find_area(self, depth, tip_type='c', a_type='p', tip_length=7.87):
         """
         Parameters
         ----------
+        depth: numpy array
+            Array of depth values
         tip_type: str 
             Type of the tip ('c', 'b', or 'p')
         a_type: str 
             Area type ('m' or 'p')
-        depth: numpy array
-            Array of depth values
         tip_length: float
             Length of the tip
         
