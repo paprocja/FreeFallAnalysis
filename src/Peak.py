@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import integrate
 
 # Represents a peak where the penetrometer has hit the ground
 class Peak:
     #peak_center is the x cordinate of the center of the peak
     #BD is a bd_data object that the peak is within
-    def __init__(self, peak_center, BD):
+    def __init__(self, peak_num, BD):
         """
         Constructor for Peak object
 
@@ -29,7 +30,7 @@ class Peak:
             Cut copies of accelerometer/raw data of peak from BD_Data
         """
         # grabs max height of peak
-        self.peak_center = BD.peaks[peak_center]
+        self.peak_center = BD.peaks[peak_num]
         
         # determines bounds of peak to copy data from
         if self.peak_center <= 1500:
@@ -48,6 +49,11 @@ class Peak:
         self._copy_from_BD_data(BD)    
         self._set_peak(BD)
         self._find_end_of_drop()
+
+        self.decelleration = None
+        self.velocity = None
+        self.depth = None
+        self.selected_peak = None
 
     def _copy_from_BD_data(self, BD):
         # copies data from the BD_data object
@@ -143,6 +149,33 @@ class Peak:
                 break
         self.end_of_drop = num1 if abs(num1) < abs(num2) else num2
 
+    def _integrate_acceleration(self, selected_peak):
+        """
+        Uses accelerometer data and selection of the spike to integrate for velocity and depth
+
+        Parameters
+        ----------
+        selected_peak: int
+
+        """
+        # splices deceleration from peak_center to end_of_drop in peak
+        decel = self.peak[selected_peak:self.end_of_drop]
+        decel_ms2 = np.array([d*9.81 for d in decel])
+        self.decelleration = decel_ms2
+        # gets time incremenets for integration
+        time = np.array([i * .005 for i in range(len(decel_ms2))])
+        # integrates deceleration over time for velocity
+        vel = integrate.cumulative_trapezoid(time, decel_ms2)
+
+        # TODO from matlab script: "find a better way to do this, vel should be near 0" in reference to the next 2 lines
+        max_vel = max(vel)
+        vel_corrected = vel - max_vel
+        self.velocity = vel_corrected
+
+        # need to offset time by 1 because somehow velocity loses a value with integration?
+        # integrates velocity over time for depth
+        self.depth = integrate.cumulative_trapezoid(time[:len(time)-1], self.velocity)
+
     def display_peak(self):
         """
         Displays a plot of a peak
@@ -151,6 +184,18 @@ class Peak:
         ax.plot(self.peak)
         ax.plot(self.g2g)
         ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
+        plt.show()
+
+    def display_decel_vel_dep(self, selected_peak=None):
+        if selected_peak is not None:
+            self._integrate_acceleration(selected_peak)
+
+        _, ax = plt.subplots()
+        ax.plot(self.decelleration, label='decel')
+        ax.plot(self.velocity, label='vel')
+        ax.plot(self.depth, label='depth')
+        ax.legend(loc='upper right')
+
         plt.show()
 
     def is_valid_spike(self, spike):
@@ -162,13 +207,4 @@ class Peak:
         """
         return True
     
-    def integrate_acceleration(self):
-        """
-        Uses accelerometer data and selection of the spike to integrate for velocity and depth
-
-        Parameters
-        ----------
-
-        """
-        # finds the end of the drop (starting point for integration) where acceleration = 1g
-        
+    
