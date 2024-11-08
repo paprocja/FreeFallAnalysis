@@ -46,10 +46,12 @@ class Peak:
             self.start = self.peak_center - 1500
             self.end = self.peak_center + 500
 
+        # performs all calculations available at time of creation
         self._copy_from_BD_data(BD)    
         self._set_peak(BD)
         self._find_end_of_drop()
 
+        # defines values to be used later for potential storage / saving objects
         self.decelleration = None
         self.velocity = None
         self.depth = None
@@ -113,7 +115,6 @@ class Peak:
 
     def _get_meter_offset(self, meter):
         """
-        Should only be called from within Peak
         Gets the y-value offset for a particular meter.
         The values need to be offset so the peak starts to increase around 0 for integration
 
@@ -156,6 +157,7 @@ class Peak:
         Parameters
         ----------
         selected_peak: int
+            x value for start of peak from graph
 
         """
         # splices deceleration from peak_center to end_of_drop in peak
@@ -187,6 +189,16 @@ class Peak:
         plt.show()
 
     def display_decel_vel_dep(self, selected_peak=None):
+        """
+        Displays the deceleration, velocity, and depth data in one plot
+
+
+        Parameters
+        ----------
+        selected_peak: int
+            Optional x value for start of peak from graph. 
+            If not provided, assumes integration has already occurred
+        """
         if selected_peak is not None:
             self._integrate_acceleration(selected_peak)
 
