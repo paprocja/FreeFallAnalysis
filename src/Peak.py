@@ -55,7 +55,7 @@ class Peak:
         self.decelleration = None
         self.velocity = None
         self.depth = None
-        self.selected_peak = None
+        self.selected_spike = None
 
     def _copy_from_BD_data(self, BD):
         # copies data from the BD_data object
@@ -150,18 +150,18 @@ class Peak:
                 break
         self.end_of_drop = num1 if abs(num1) < abs(num2) else num2
 
-    def _integrate_acceleration(self, selected_peak):
+    def _integrate_acceleration(self, selected_spike):
         """
         Uses accelerometer data and selection of the spike to integrate for velocity and depth
 
         Parameters
         ----------
-        selected_peak: int
+        selected_spike: int
             x value for start of peak from graph
 
         """
         # splices deceleration from peak_center to end_of_drop in peak
-        decel = self.peak[selected_peak:self.end_of_drop]
+        decel = self.peak[selected_spike:self.end_of_drop]
         decel_ms2 = np.array([d*9.81 for d in decel])
         self.decelleration = decel_ms2
         # gets time incremenets for integration
@@ -188,24 +188,25 @@ class Peak:
         ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
         plt.show()
 
-    def display_decel_vel_dep(self, selected_peak=None):
+
+    def display_decel_vel_dep(self, selected_spike=None):
         """
         Displays the deceleration, velocity, and depth data in one plot
-
+        TODO incorporate this with QSBC QDYN stuff
 
         Parameters
         ----------
-        selected_peak: int
+        selected_spike: int
             Optional x value for start of peak from graph. 
             If not provided, assumes integration has already occurred
         """
-        if selected_peak is not None:
-            self._integrate_acceleration(selected_peak)
+        if selected_spike is not None:
+            self._integrate_acceleration(selected_spike)
 
         _, ax = plt.subplots()
-        ax.plot(self.decelleration, label='decel')
-        ax.plot(self.velocity, label='vel')
-        ax.plot(self.depth, label='depth')
+        end = self.depth[-1]
+        ax.plot(self.decelleration, np.append(self.depth, [end, end]), label='decel')
+        ax.plot(self.velocity, np.append(self.depth, [end]), label='vel')
         ax.legend(loc='upper right')
 
         plt.show()
