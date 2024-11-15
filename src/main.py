@@ -142,6 +142,7 @@ def main():
     print(f'Selected spike: {selected_spike}')
 
     selected_peak.display_decel_vel_dep(selected_spike)
+    area = selected_peak.find_area(selected_peak.depth)
 
 if __name__ == "__main__":
     main()
