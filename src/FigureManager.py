@@ -29,9 +29,12 @@ class FigureManager:
         self.fig.canvas.draw_idle()
         plt.show(block=False)
 
+
     def add_peak_buttons(self, peaks, callback):
         
         """
+        ---------    NOT IN USE FOR NOW    ---------
+
         Adds a button for each peak to the figure for interaction.
 
         Parameters

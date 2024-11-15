@@ -180,15 +180,6 @@ class Peak:
 
     def display_peak(self, fig_manager):
         """
-        Displays a plot of a peak
-        """
-        # _, ax = plt.subplots()
-        # ax.plot(self.peak)
-        # ax.plot(self.g2g)
-        # ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
-        # plt.show()
-
-        """
         Displays the peak using the figure manager.
         """
         def plot(ax):
@@ -202,7 +193,7 @@ class Peak:
         fig_manager.display(plot)
 
 
-    def display_decel_vel_dep(self, selected_spike=None):
+    def display_decel_vel_dep(self, fig_manager,  selected_spike=None):
         """
         Displays the deceleration, velocity, and depth data in one plot
         TODO incorporate this with QSBC QDYN stuff
@@ -214,15 +205,15 @@ class Peak:
             If not provided, assumes integration has already occurred
         """
         if selected_spike is not None:
-            self._integrate_acceleration(selected_spike)
+                self._integrate_acceleration(selected_spike)
+        
+        def plot(ax):
+            end = self.depth[-1]
+            ax.plot(self.decelleration, np.append(self.depth, [end, end]), label='decel')
+            ax.plot(self.velocity, np.append(self.depth, [end]), label='vel')
+            ax.legend(loc='upper right')
 
-        _, ax = plt.subplots()
-        end = self.depth[-1]
-        ax.plot(self.decelleration, np.append(self.depth, [end, end]), label='decel')
-        ax.plot(self.velocity, np.append(self.depth, [end]), label='vel')
-        ax.legend(loc='upper right')
-
-        plt.show()
+        fig_manager.display(plot)
 
     def is_valid_spike(self, spike):
         """
