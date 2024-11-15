@@ -5,10 +5,12 @@ import threading
 from queue import Queue
 from BD_Data import BD_Data
 from Peak import Peak
+from FigureManager import FigureManager
+
 
 # BD_Data object with parsed data from binary file
 bd_data = None
-
+fig_manager = FigureManager()
 # thread-safe data structure for return value
 selection_results = Queue()
 
@@ -19,6 +21,8 @@ def on_select_file(file_path, bdid):
     """
     global bd_data
     bd_data = BD_Data(file_path, bdid)
+    bd_data.display_initial_data(fig_manager)
+    print("bas")
     
 def save_to_csv():
     """
@@ -31,7 +35,7 @@ def save_to_csv():
     else:
         bd_data.save_data("output/F_Matrix.csv")
 
-def prompt_user_for_int(selection_results, input_msg, output_msg, is_valid):
+def prompt_user_for_int(input_msg, output_msg, is_valid):
     """
     Prompts the user for an interger. Designed to be run as a thread.
     Will continue to ask user for input until a valid integer is input.
@@ -60,8 +64,7 @@ def prompt_user_for_int(selection_results, input_msg, output_msg, is_valid):
             if is_valid(selection):
                 # if valid queue the selection and output that the value is okay
                 invalid = False
-                selection_results.put(selection)
-                print(output_msg)
+                return selection
             else:
                 print(f'{selection} is not a valid choice!')
         except Exception as _:
@@ -113,35 +116,79 @@ def get_spike(selected_peak):
     return selection_results.get()
 
 def main():
-    # Creates the file selection ui, passing in command to be executed when button is clicked
-    file_select = FileSelectUI.FileSelectUI(on_select_file)
+    # # Creates the file selection ui, passing in command to be executed when button is clicked
+    # file_select = FileSelectUI.FileSelectUI(on_select_file)
     
-    # Starts the file selection ui loop
+    # # Starts the file selection ui loop
+    # file_select.create_ui()
+
+    # ## save_to_csv()
+
+    # # See if peaks were found within the file
+    # if bd_data.number_peaks == 0:
+    #     exit("No peaks found. Exiting Program.")
+    
+    # print(f'x values: {bd_data.peaks}')
+    # print(f'y values: {bd_data.heights}')
+
+    # # Display peaks and have user select a peak
+    # selected_peak_number = get_peak_number()
+
+    # print(f'peak number: {selected_peak_number}')
+
+    # # Create a peak based off the x value of the peak
+    # selected_peak = Peak(selected_peak_number, bd_data)
+    
+    # # Display the selected peak and have user select a spike within the peak
+    # selected_spike = get_spike(selected_peak)
+
+    # print(f'Selected spike: {selected_spike}')
+
+    # Create the figure manager
+    
+
+
+    # def setup_peak_selection_buttons():
+    #     """
+    #     Creates buttons for each peak to allow the user to select a peak.
+    #     """
+    #     peaks = list(range(1, bd_data.number_peaks + 1))  # Peak numbers to display
+
+    #     def on_peak_button_clicked(peak_number):
+    #         # Adjust peak_number to zero-based index
+    #         selected_peak_index = peak_number - 1
+    #         if bd_data.is_valid_peak(selected_peak_index + 1):  # Check if the peak is valid
+    #             selected_peak = Peak(selected_peak_index, bd_data)
+    #             selected_peak.display_peak(fig_manager)
+    #         else:
+    #             print(f"Peak {peak_number} is not valid!")
+
+    #     # Add buttons for each peak
+    #     fig_manager.add_peak_buttons(peaks, on_peak_button_clicked)
+
+    # File selection UI
+    file_select = FileSelectUI.FileSelectUI(on_select_file)
     file_select.create_ui()
 
-    ## save_to_csv()
-
-    # See if peaks were found within the file
-    if bd_data.number_peaks == 0:
-        exit("No peaks found. Exiting Program.")
+    if bd_data is None or bd_data.number_peaks == 0:
+        print("No peaks found. Exiting Program.")
+        return
     
-    print(f'x values: {bd_data.peaks}')
-    print(f'y values: {bd_data.heights}')
+    options = [i+1 for i in range(bd_data.number_peaks)]
+    peak_number = prompt_user_for_int(f"Select a peak {options}:\n", f"Please close the figure to see the selected plot.\n", bd_data.is_valid_peak)
+    selected_peak_index = peak_number - 1
+    if bd_data.is_valid_peak(selected_peak_index + 1):  # Check if the peak is valid
+        selected_peak = Peak(selected_peak_index, bd_data)
+        selected_peak.display_peak(fig_manager)
+    else:
+        print(f"Peak {peak_number} is not valid!")
 
-    # Display peaks and have user select a peak
-    selected_peak_number = get_peak_number()
-
-    print(f'peak number: {selected_peak_number}')
-
-    # Create a peak based off the x value of the peak
-    selected_peak = Peak(selected_peak_number, bd_data)
+    user_input = prompt_user_for_int( f"Select a spike within the peak:\n", "Please close the figure to see the integration graphs.\n", selected_peak.is_valid_spike)
     
-    # Display the selected peak and have user select a spike within the peak
-    selected_spike = get_spike(selected_peak)
 
-    print(f'Selected spike: {selected_spike}')
+    # plt.show()
 
-    selected_peak.display_decel_vel_dep(selected_spike)
+    # selected_peak.display_decel_vel_dep(selected_spike)
 
 if __name__ == "__main__":
     main()

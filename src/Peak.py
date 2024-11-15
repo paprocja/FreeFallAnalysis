@@ -178,15 +178,28 @@ class Peak:
         # integrates velocity over time for depth
         self.depth = integrate.cumulative_trapezoid(time[:len(time)-1], self.velocity)
 
-    def display_peak(self):
+    def display_peak(self, fig_manager):
         """
         Displays a plot of a peak
         """
-        _, ax = plt.subplots()
-        ax.plot(self.peak)
-        ax.plot(self.g2g)
-        ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
-        plt.show()
+        # _, ax = plt.subplots()
+        # ax.plot(self.peak)
+        # ax.plot(self.g2g)
+        # ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
+        # plt.show()
+
+        """
+        Displays the peak using the figure manager.
+        """
+        def plot(ax):
+            ax.plot(self.peak)
+            ax.plot(self.g2g)
+            ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
+            ax.set_title(f"Peak at {self.peak_center}")
+            ax.set_xlabel("Sample")
+            ax.set_ylabel("Value")
+        
+        fig_manager.display(plot)
 
 
     def display_decel_vel_dep(self, selected_spike=None):
