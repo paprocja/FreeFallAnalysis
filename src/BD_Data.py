@@ -135,6 +135,11 @@ class BD_Data:
                 self.g250g = ((self.data[:, 9] - 46439.9) / 13677.9)
                 self.ppm *= 6.89475729  # Convert to kPa
 
+                # THE MATLAB SAID THIS WASN'T IMPORTANT. IT WAS.
+                self.g2g = np.insert(self.g2g, 0, 1)
+                self.g200g = np.insert(self.g200g, 0, 1)
+                self.g18g = np.insert(self.g18g, 0, 1)
+
             case _:
                 raise Exception(f'Unknown Blue Drop #{bdid}')
 

@@ -59,15 +59,15 @@ class Peak:
 
     def _copy_from_BD_data(self, BD):
         # copies data from the BD_data object
-        self.data = BD.data[self.start:self.end].copy()
-        self.g250g = BD.g250g[self.start:self.end].copy()
-        self.g200g = BD.g200g[self.start:self.end].copy()
-        self.g50g = BD.g50g[self.start:self.end].copy()
-        self.g18g = BD.g18g[self.start:self.end].copy()
-        self.g2g = BD.g2g[self.start:self.end].copy()
+        self.data = BD.data[self.start:self.end+1].copy()
+        self.g250g = BD.g250g[self.start:self.end+1].copy()
+        self.g200g = BD.g200g[self.start:self.end+1].copy()
+        self.g50g = BD.g50g[self.start:self.end+1].copy()
+        self.g18g = BD.g18g[self.start:self.end+1].copy()
+        self.g2g = BD.g2g[self.start:self.end+1].copy()
         # Grabs the x,y values of the peak. 
         # Offsets the x value to be in terms of the peak.
-        self.peak_height = BD.g250g[self.peak_center].copy()
+        self.peak_height = BD.g250g[self.peak_center]
         self.peak_center = self.peak_center - self.start
 
     def _set_peak(self, BD):
@@ -93,6 +93,7 @@ class Peak:
         max_200 = np.max(self.g200g)
 
         # Based on the max value of the peak determine which accelerometer to use for the peak
+        offset = None
         if (max_250 > 200):
             spliced_meter = self.g250g.copy()
             meter_to_analyze = BD.g250g.copy()
@@ -102,6 +103,7 @@ class Peak:
         elif (max_200 > 18):
             spliced_meter = self.g50g.copy()
             meter_to_analyze = BD.g50g.copy()
+            offset = np.mean(meter_to_analyze[self.end + 100:self.end + 201])
         elif (max_200 > 1.7):
             spliced_meter = self.g18g.copy()
             meter_to_analyze = BD.g18g.copy()
@@ -110,8 +112,10 @@ class Peak:
             meter_to_analyze = BD.g2g.copy()
 
         # Stores the peak as an array offset for integration
-        offset = self._get_meter_offset(meter_to_analyze)        
+        if offset is None:
+            offset = self._get_meter_offset(meter_to_analyze) 
         self.peak = spliced_meter - offset
+        
 
     def _get_meter_offset(self, meter):
         """
@@ -129,10 +133,10 @@ class Peak:
             the y offset for a specific meter's data and interval
         """
 
-        if self.end + 2000 > len(meter):
+        if self.end + 2001 > len(meter):
             # if at the end of the graph, return values before the interval
-            return np.mean(meter[self.start - 2000:self.start - 1000])
-        return np.mean(meter[self.end + 1000:self.end + 2000])
+            return np.mean(meter[self.start - 2000:self.start - 999])
+        return np.mean(meter[self.end + 1000:self.end + 2001])
 
     def _find_end_of_drop(self):
         """
@@ -143,7 +147,7 @@ class Peak:
         we could just use num1? We're looping from peak to end of it, so its only 
         going down?
         """
-        for i in range(self.peak_center, self.end):
+        for i in range(self.peak_center, self.end + 1):
             if self.peak[i] <= 0:
                 num1 = i
                 num2 = i-1
@@ -161,8 +165,8 @@ class Peak:
 
         """
         # splices deceleration from peak_center to end_of_drop in peak
-        decel = self.peak[selected_spike:self.end_of_drop]
-        decel_ms2 = np.array([d*9.81 for d in decel])
+        decel = np.array(self.peak[selected_spike:self.end_of_drop+1])
+        decel_ms2 = decel * 9.81
         self.decelleration = decel_ms2
         # gets time incremenets for integration
         time = np.array([i * .005 for i in range(len(decel_ms2))])
@@ -176,7 +180,7 @@ class Peak:
 
         # need to offset time by 1 because somehow velocity loses a value with integration?
         # integrates velocity over time for depth
-        self.depth = integrate.cumulative_trapezoid(time[:len(time)-1], self.velocity)
+        self.depth = integrate.cumulative_trapezoid(time[1:], self.velocity)
 
     def display_peak(self, fig_manager):
         """
