@@ -9,6 +9,7 @@ class FileSelectUI:
 
     def dispose(self):
         self.root.destroy()
+        self.root.quit()
 
     def on_button_click(self):
         # get the file path from the users selection

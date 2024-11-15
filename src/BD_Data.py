@@ -172,42 +172,64 @@ class BD_Data:
         else:
             return False
 
-    def display_initial_data(self):
-        """
-        Displays initial data and peaks
 
-        Parameters
-        ----------
-        peaks: List[int]
-            x values of peaks
-        heights: List[int]
-            y values of peaks       
-        """
-        # establish plot and axis
-        fig, ax = plt.subplots(figsize=(12, 6))
+    # def display_initial_data(self):
+    #     """
+    #     Displays initial data and peaks
 
-        # plot vertical accelerometer data
-        ax.plot(self.g2g, linestyle='-', linewidth=.5, label="g2g", color='green')
-        ax.plot(self.g18g, linestyle='-', linewidth=.5, label="g18g", color='red')
-        ax.plot(self.g50g, linestyle='-', linewidth=.5, label="g50g", color='blue')
-        ax.plot(self.g250g, linestyle='-', linewidth=.5, label="g250g", color='purple')
-        # plot peaks as stars
-        ax.scatter(self.peaks, self.heights, marker='*', label='peaks', color='black')
+    #     Parameters
+    #     ----------
+    #     peaks: List[int]
+    #         x values of peaks
+    #     heights: List[int]
+    #         y values of peaks       
+    #     """
+    #     # establish plot and axis
+    #     fig, ax = plt.subplots(figsize=(12, 6))
 
-        # label peaks with selection numbers
-        for i, txt in enumerate(range(1, self.number_peaks+1)):
-            plt.annotate(txt, (self.peaks[i], self.heights[i]), xytext=(5,5), textcoords='offset points',
-                            ha='center', va='bottom', bbox=dict(boxstyle='round,pad=0.5', fc='blue', alpha=0.5),
-                        arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.2"))
+    #     # plot vertical accelerometer data
+    #     ax.plot(self.g2g, linestyle='-', linewidth=.5, label="g2g", color='green')
+    #     ax.plot(self.g18g, linestyle='-', linewidth=.5, label="g18g", color='red')
+    #     ax.plot(self.g50g, linestyle='-', linewidth=.5, label="g50g", color='blue')
+    #     ax.plot(self.g250g, linestyle='-', linewidth=.5, label="g250g", color='purple')
+    #     # plot peaks as stars
+    #     ax.scatter(self.peaks, self.heights, marker='*', label='peaks', color='black')
 
-        # label legend, axis, title
-        ax.legend(loc='upper right')
-        ax.set_xlabel('Steps', fontsize=15)
-        ax.set_ylabel('Deceleration (g)', fontsize=15)
-        ax.set_title('Initial Data Visualization', fontsize=15)
-        plt.tight_layout()
-        plt.show()
+    #     # label peaks with selection numbers
+    #     for i, txt in enumerate(range(1, self.number_peaks+1)):
+    #         plt.annotate(txt, (self.peaks[i], self.heights[i]), xytext=(5,5), textcoords='offset points',
+    #                         ha='center', va='bottom', bbox=dict(boxstyle='round,pad=0.5', fc='blue', alpha=0.5),
+    #                     arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.2"))
+
+    #     # label legend, axis, title
+    #     ax.legend(loc='upper right')
+    #     ax.set_xlabel('Steps', fontsize=15)
+    #     ax.set_ylabel('Deceleration (g)', fontsize=15)
+    #     ax.set_title('Initial Data Visualization', fontsize=15)
+    #     plt.tight_layout()
+    #     plt.show()
     
+    def display_initial_data(self, fig_manager):
+        """
+        Displays initial data and peaks using the figure manager.
+        """
+        def plot(ax):
+            ax.plot(self.g2g, linestyle='-', linewidth=.5, label="g2g", color='green')
+            ax.plot(self.g18g, linestyle='-', linewidth=.5, label="g18g", color='red')
+            ax.plot(self.g50g, linestyle='-', linewidth=.5, label="g50g", color='blue')
+            ax.plot(self.g250g, linestyle='-', linewidth=.5, label="g250g", color='purple')
+            ax.scatter(self.peaks, self.heights, marker='*', label='peaks', color='black')
+            for i, txt in enumerate(range(1, self.number_peaks + 1)):
+                ax.annotate(txt, (self.peaks[i], self.heights[i]), xytext=(5, 5), textcoords='offset points',
+                            ha='center', va='bottom', bbox=dict(boxstyle='round,pad=0.5', fc='blue', alpha=0.5),
+                            arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.2"))
+            ax.legend(loc='upper right')
+            ax.set_xlabel('Steps')
+            ax.set_ylabel('Deceleration (g)')
+            ax.set_title('Initial Data Visualization')
+
+        fig_manager.display(plot)
+
 
     def save_data(self, file_path):
         """
