@@ -33,15 +33,13 @@ def save_to_csv():
     else:
         bd_data.save_data("output/F_Matrix.csv")
 
-def prompt_user_for_int(input_msg, output_msg, is_valid):
+def prompt_user_for_num(input_msg, output_msg, is_valid, data_type="i"):
     """
-    Prompts the user for an interger. Designed to be run as a thread.
+    Prompts the user for an interger.
     Will continue to ask user for input until a valid integer is input.
 
     Parameters
     ----------
-    selection_resuls: Queue
-        Thread-safe data structure to return selected peak to main thread
     input_msg: f string
         The prompt displayed to the user asking for input
     output_msg: f string
@@ -55,8 +53,11 @@ def prompt_user_for_int(input_msg, output_msg, is_valid):
         selection = input(input_msg)
         # attempt to convert input to an integer
         try:
-            # get the value the user entered
-            selection = int(selection)
+            if data_type != 'i':
+                selection = float(selection)
+            else:
+                # get the value the user entered
+                selection = int(selection)
 
             # validate the users input
             if is_valid(selection):
@@ -66,8 +67,58 @@ def prompt_user_for_int(input_msg, output_msg, is_valid):
             else:
                 print(f'{selection} is not a valid choice!')
         except Exception as _:
-            print(f'{selection} is not a valid integer!')
+            type = 'integer' if data_type == 'i' else 'float' 
+            print(f'{selection} is not a valid {type}!')
 
+
+def get_correction_type():
+    """
+    Gets a correction type from the user.
+
+    Parameters
+    ----------
+
+    Return
+    ----------
+    int: Int value of the strain rate correction type 
+    """
+
+    # determine if valid selection is entered
+    def is_valid_correction_type(correction):
+        if correction - 1 in range(0, 3):
+            return True
+        else:
+            return False
+
+    # Start a UI thread to get correction type
+    correction_type = prompt_user_for_num(f"Select a correction type. Enter 1 for Logarithmic, 2 for Asinh, or 3 for Beta.\n",
+                                                                            "Valid correction type entered.\n", is_valid_correction_type)
+    return correction_type
+
+def get_correction_factor(correction_type):
+    def is_valid_k(k):
+        if k >= 0 and k <= 1.5:
+            return True
+        else:
+            return False
+        
+    def is_valid_beta(k):
+        if k >= 0.035 and k <= 0.085:
+            return True
+        else:
+            return False
+
+
+    if correction_type == 3:
+        # Start a UI thread to get beta value
+        correction_factor = prompt_user_for_num(f"Enter in a beta value between 0.035 and 0.085.\n",
+                                                                                "Valid beta value.\n", is_valid_beta, 'f')
+    else:
+        # Start a UI thread to get k value
+        correction_factor = prompt_user_for_num(f"Enter in a k value between 0 and 1.5.\n",
+                                                                                "Valid k value.\n", is_valid_k, 'f')
+
+    return correction_factor
 
 def main():
     
@@ -85,7 +136,7 @@ def main():
 
     # Get the peaks set up and allow for user to input a peak to move to the spike figure
     options = [i+1 for i in range(bd_data.number_peaks)]
-    peak_number = prompt_user_for_int(f"Select a peak {options}:\n", f"Please close the figure to see the selected plot.\n", bd_data.is_valid_peak)
+    peak_number = prompt_user_for_num(f"Select a peak {options}:\n", f"Please close the figure to see the selected plot.\n", bd_data.is_valid_peak)
     selected_peak_index = peak_number - 1
     if bd_data.is_valid_peak(selected_peak_index + 1):  # Check if the peak is valid
         selected_peak = Peak(selected_peak_index, bd_data)
@@ -94,10 +145,27 @@ def main():
         print(f"Peak {peak_number} is not valid!")
 
     # Have the user select the spike
-    spike_number = prompt_user_for_int( f"Select a spike within the peak:\n", "Please close the figure to see the integration graphs.\n", selected_peak.is_valid_spike)
+    spike_number = prompt_user_for_num( f"Select a spike within the peak:\n", "Please close the figure to see the integration graphs.\n", selected_peak.is_valid_spike)
     
     selected_peak.display_decel_vel_dep(fig_manager, spike_number)
     input("Press enter to continue.")   
+
+    selected_peak.find_area()
+    
+    # Get input for type of correction
+    correction_type = get_correction_type()
+
+    print(f'Correction type: {correction_type}')
+
+    # Get correction value either k or beta
+    correction_factor = get_correction_factor(correction_type)
+
+    print(f'Correction factor: {correction_factor}')
+
+    # Will also need to pass in the tip type when not using default to c
+    selected_peak.correct_QSBC(correction_type, correction_factor)
+
+
 
 
 if __name__ == "__main__":

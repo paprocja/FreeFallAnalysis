@@ -1,6 +1,8 @@
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import integrate
+from scipy.integrate import dblquad
 
 # Represents a peak where the penetrometer has hit the ground
 class Peak:
@@ -56,6 +58,9 @@ class Peak:
         self.velocity = None
         self.depth = None
         self.selected_spike = None
+        self.area = None
+        self.corrected_QSBC = None
+        self.correct_QSBC_kPa = None
 
     def _copy_from_BD_data(self, BD):
         # copies data from the BD_data object
@@ -174,13 +179,37 @@ class Peak:
         vel = integrate.cumulative_trapezoid(time, decel_ms2)
 
         # TODO from matlab script: "find a better way to do this, vel should be near 0" in reference to the next 2 lines
+        ## IS THIS FUCKING BACKWARDS????
         max_vel = max(vel)
-        vel_corrected = vel - max_vel
+        vel_corrected = vel - max_vel   
         self.velocity = vel_corrected
+
+        print(f"reg velocity: {self.velocity}")
 
         # need to offset time by 1 because somehow velocity loses a value with integration?
         # integrates velocity over time for depth
         self.depth = integrate.cumulative_trapezoid(time[1:], self.velocity)
+
+    def _get_mass_length(self, tip_type):
+        """
+        Parameters
+        ----------
+        tip_type: str 
+            Type of the tip ('c', 'b', or 'p')
+        
+        Return
+        ------
+        mass: float
+            Mass of the tip
+        lenght: float
+            length of the tip
+        """
+        if tip_type == 'c':
+            return 7.71, 7.87
+        elif tip_type == 'p':
+            return 9.15, 8.26
+        else:
+            return 10.30, 8.57
 
     def display_peak(self, fig_manager):
         """
@@ -196,18 +225,12 @@ class Peak:
         
         fig_manager.display(plot)
 
-
     def display_decel_vel_dep(self, fig_manager,  selected_spike=None):
         """
         Displays the deceleration, velocity, and depth data in one plot
         TODO incorporate this with QSBC QDYN stuff
-
-        Parameters
-        ----------
-        selected_spike: int
-            Optional x value for start of peak from graph. 
-            If not provided, assumes integration has already occurred
         """
+
         if selected_spike is not None:
                 self._integrate_acceleration(selected_spike)
         
@@ -218,11 +241,8 @@ class Peak:
             ax.legend(loc='upper right')
 
         fig_manager.display(plot)
-
-    def is_valid_spike(self, spike):
-        return True
-
-    def find_area(self, depth, tip_type='c', a_type='p', tip_length=7.87):
+        
+    def find_area(self, tip_type='c', a_type='p', tip_length=7.87):
         """
         Parameters
         ----------
@@ -241,7 +261,7 @@ class Peak:
             Area values for each depth
         """
         
-        depth_cm = np.array(depth) * 100  # Convert depth to cm
+        depth_cm = np.array(self.depth) * 100  # Convert depth to cm
         A1 = np.zeros(len(depth_cm))
         r = np.zeros(len(depth_cm))
         
@@ -294,3 +314,55 @@ class Peak:
         
         self.area = A1
         return A1
+
+    def correct_QSBC(self, correction_type, correction_factor, tip_type = 'c'):
+        """
+        Corrects the quasi static bearing capacity to be standardized with other researchers.
+
+        Parameters
+        ----------
+        correction_type: int
+            the type of correction either Log, Asinh, Beta
+        correction_factor: float
+            either the k or beta value to be used in calculation
+        area: numpy array
+            an array of area values
+        tip_type: char
+            the type of tip the penetrometer has
+
+        """
+        # Set length and mass based on the type 
+        mass, _ = self._get_mass_length(tip_type)
+
+        # Get the velocity correction
+        corrected_velocity = self.velocity / 0.02
+
+        # Calculate fsr
+        if correction_type == 1:
+            # Logarithmic
+            fsr = np.array([1 + correction_factor * math.log10(v) for v in corrected_velocity])
+        elif correction_factor == 2:
+            # Asinh
+            k_prime = correction_factor / math.log(10)
+            fsr = np.array([1 + k_prime * math.asinh(v) for v in corrected_velocity])
+        else:
+            # Beta
+            fsr = np.array([v ** correction_factor for v in corrected_velocity])
+
+        # Get fource boutancy
+        force_bouyancy = self.decelleration * mass
+
+        # Get dynamic bearing capacity, chop off the beginning due to loss when integration
+        q_dynamic = self.area / force_bouyancy[2:]
+
+        # chop off the beginning due to loss when integration
+        self.corrected_QSBC =  q_dynamic / fsr[1:]
+        self.correct_QSBC_kPa = self.corrected_QSBC / 1000
+
+        _, ax = plt.subplots()
+        ax.plot(self.corrected_QSBC[::-1])
+        #ax.plot(self.correct_QSBC_kPa[::-1])
+        plt.show()
+
+    def is_valid_spike(self, spike):
+        return True
