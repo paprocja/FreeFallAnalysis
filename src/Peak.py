@@ -222,7 +222,7 @@ class Peak:
     def is_valid_spike(self, spike):
         return True
 
-    def find_area(self, depth, tip_type='c', a_type='p', tip_length=7.87):
+    def find_area(self, tip_type='c', a_type='p', tip_length=7.87):
         """
         Parameters
         ----------
@@ -240,7 +240,7 @@ class Peak:
         numpy array 
             Area values for each depth
         """
-        
+        depth = self.depth
         depth_cm = np.array(depth) * 100  # Convert depth to cm
         A1 = np.zeros(len(depth_cm))
         r = np.zeros(len(depth_cm))
@@ -280,7 +280,7 @@ class Peak:
                         r[k] = 4.375
                     
                     polarfun = lambda theta, r: r * np.sqrt(0.745 * r**2 + 1)
-                    A1[k], _ = dblquad(polarfun, 0, 2 * np.pi, lambda _: 0, lambda _: r[k])
+                    A1[k], _ = integrate.dblquad(polarfun, 0, 2 * np.pi, lambda _: 0, lambda _: r[k])
                 
                 elif a_type == 'p':
                     if depth_cm[k] < tip_length:

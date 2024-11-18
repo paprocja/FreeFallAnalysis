@@ -99,6 +99,7 @@ def main():
     selected_peak.display_decel_vel_dep(fig_manager, spike_number)
     input("Press enter to continue.")   
 
+    selected_peak.find_area()
 
 if __name__ == "__main__":
     main()
