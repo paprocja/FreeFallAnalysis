@@ -55,6 +55,7 @@ class Peak:
 
         # defines values to be used later for potential storage / saving objects
         self.decelleration = None
+        self.decelleation_ms2 = None
         self.velocity = None
         self.depth = None
         self.selected_spike = None
@@ -142,6 +143,29 @@ class Peak:
             # if at the end of the graph, return values before the interval
             return np.mean(meter[self.start - 2000:self.start - 999])
         return np.mean(meter[self.end + 1000:self.end + 2001])
+    
+    def _get_mass_length(self, tip_type):
+        """
+        Gets the mass and length of a meter given a specific tip type.
+
+        Parameters
+        ----------
+        tip_type: char
+            the tip type to get the mass and length for 
+
+        Return
+        ------
+        float:
+            the mass of a meter
+        float:
+            the length of a meter
+        """
+        if tip_type == 'c':            
+            return 7.71, 7.87
+        elif tip_type ==  'e':
+            return 9.15, 8.26
+        elif 'b': 
+            return 10.30, 8.57
 
     def _find_end_of_drop(self):
         """
@@ -152,12 +176,12 @@ class Peak:
         we could just use num1? We're looping from peak to end of it, so its only 
         going down?
         """
-        for i in range(self.peak_center, self.end + 1):
+        for i in range(self.peak_center, len(self.peak)):
             if self.peak[i] <= 0:
                 num1 = i
                 num2 = i-1
                 break
-        self.end_of_drop = num1 if abs(num1) < abs(num2) else num2
+        self.end_of_drop = num1 if abs(self.peak[num1]) < abs(self.peak[num2]) else num2
 
     def _integrate_acceleration(self, selected_spike):
         """
@@ -170,47 +194,21 @@ class Peak:
 
         """
         # splices deceleration from peak_center to end_of_drop in peak
-        decel = np.array(self.peak[selected_spike:self.end_of_drop+1])
-        decel_ms2 = decel * 9.81
-        self.decelleration = decel_ms2
-        # gets time incremenets for integration
-        time = np.array([i * .005 for i in range(len(decel_ms2))])
-        # integrates deceleration over time for velocity
-        vel = integrate.cumulative_trapezoid(time, decel_ms2)
+        decel = np.array(self.peak[selected_spike:self.end_of_drop + 1]) # +1 for inclusion (difference in MATLAB)
+        self.decelleration = decel
+        self.decelleation_ms2 = decel * 9.81
+        
+        # integrates deceleration over time (.0005 seconds per record) for velocity
+        vel = integrate.cumulative_trapezoid(self.decelleation_ms2, dx=.0005, initial=0)
 
         # TODO from matlab script: "find a better way to do this, vel should be near 0" in reference to the next 2 lines
-        ## IS THIS FUCKING BACKWARDS????
-        max_vel = max(vel)
-        vel_corrected = vel - max_vel   
+        max_vel = np.max(vel)
+        vel_corrected = max_vel - vel
         self.velocity = vel_corrected
 
-        print(f"reg velocity: {self.velocity}")
-
-        # need to offset time by 1 because somehow velocity loses a value with integration?
         # integrates velocity over time for depth
-        self.depth = integrate.cumulative_trapezoid(time[1:], self.velocity)
-
-    def _get_mass_length(self, tip_type):
-        """
-        Parameters
-        ----------
-        tip_type: str 
-            Type of the tip ('c', 'b', or 'p')
+        self.depth = integrate.cumulative_trapezoid(self.velocity, dx=.0005, initial=0)
         
-        Return
-        ------
-        mass: float
-            Mass of the tip
-        lenght: float
-            length of the tip
-        """
-        if tip_type == 'c':
-            return 7.71, 7.87
-        elif tip_type == 'p':
-            return 9.15, 8.26
-        else:
-            return 10.30, 8.57
-
     def display_peak(self, fig_manager):
         """
         Displays the peak using the figure manager.
@@ -236,8 +234,9 @@ class Peak:
         
         def plot(ax):
             end = self.depth[-1]
-            ax.plot(self.decelleration, np.append(self.depth, [end, end]), label='decel')
-            ax.plot(self.velocity, np.append(self.depth, [end]), label='vel')
+            ax.invert_yaxis()
+            ax.plot(self.decelleration, self.depth, label='decel')
+            ax.plot(self.velocity, self.depth, label='vel')
             ax.legend(loc='upper right')
 
         fig_manager.display(plot)
