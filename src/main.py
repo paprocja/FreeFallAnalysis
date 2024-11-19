@@ -99,17 +99,10 @@ def get_correction_type():
 
 def get_correction_factor(correction_type):
     def is_valid_k(k):
-        if k >= 0 and k <= 1.5:
-            return True
-        else:
-            return False
+        return k >= 0 and k <= 1.5
         
     def is_valid_beta(k):
-        if k >= 0.035 and k <= 0.085:
-            return True
-        else:
-            return False
-
+        return k >= 0.035 and k <= 0.085
 
     if correction_type == 3:
         # Start a UI thread to get beta value
