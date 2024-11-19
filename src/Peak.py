@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import integrate
@@ -57,6 +58,7 @@ class Peak:
         self.velocity = None
         self.depth = None
         self.selected_spike = None
+        self.area = None
 
     def _copy_from_BD_data(self, BD):
         # copies data from the BD_data object
@@ -117,7 +119,6 @@ class Peak:
             offset = self._get_meter_offset(meter_to_analyze) 
         self.peak = spliced_meter - offset
         
-
     def _get_meter_offset(self, meter):
         """
         Gets the y-value offset for a particular meter.
@@ -138,6 +139,30 @@ class Peak:
             # if at the end of the graph, return values before the interval
             return np.mean(meter[self.start - 2000:self.start - 999])
         return np.mean(meter[self.end + 1000:self.end + 2001])
+    
+    def _get_mass_length(self, tip_type):
+        """
+        Gets the mass and length of a meter given a specific tip type.
+
+        Parameters
+        ----------
+        tip_type: char
+            the tip type to get the mass and length for 
+
+        Return
+        ------
+        float:
+            the mass of a meter
+        float:
+            the length of a meter
+        """
+        if tip_type == 'b':            
+            return 10.30, 8.57
+        elif tip_type ==  'e':
+            return 9.15, 8.26
+        else : 
+            return 7.71, 7.87
+
 
     def _find_end_of_drop(self):
         """
@@ -169,7 +194,7 @@ class Peak:
         decel = np.array(self.peak[selected_spike:self.end_of_drop + 1]) # +1 for inclusion (difference in MATLAB)
         self.decelleration = decel
         self.decelleation_ms2 = decel * 9.81
-        
+
         # integrates deceleration over time (.0005 seconds per record) for velocity
         vel = integrate.cumulative_trapezoid(self.decelleation_ms2, dx=.0005, initial=0)
 
@@ -180,6 +205,53 @@ class Peak:
 
         # integrates velocity over time for depth
         self.depth = integrate.cumulative_trapezoid(self.velocity, dx=.0005, initial=0)
+
+    def _calculate_QSBC_for_K(self, correction_type, correction_factor, tip_type):
+        """
+        Corrects the quasi static bearing capacity to be standardized with other researchers.
+
+        Parameters
+        ----------
+        correction_type: int
+            the type of correction either Log, Asinh, Beta
+        correction_factor: float
+            either the k or beta value to be used in calculation
+        tip_type: char
+            the type of tip the penetrometer has
+
+        Return
+        ------
+        numpy array
+            the corrected qsbc for a given correction type, factor, and tip
+        """
+        mass, _ = self._get_mass_length(tip_type)
+
+        # Take off the last value because it is 0 and we cannot take log of 0
+        corrected_velocity = self.velocity[:-1] / 0.02
+
+        # Calculate fsr
+        if correction_type == 1:
+            # Logarithmic
+            fsr = np.array([1 + correction_factor * math.log10(v) for v in corrected_velocity])
+        elif correction_factor == 2:
+            # Asinh
+            k_prime = correction_factor / math.log(10)
+            fsr = np.array([1 + k_prime * math.asinh(v) for v in corrected_velocity])
+        else:
+            # Beta
+            fsr = np.array([v ** correction_factor for v in corrected_velocity])
+
+        force_bouyancy = self.decelleration * mass * 9.81
+
+        # the first value in the area array is 0
+        q_dynamic = force_bouyancy[1:] / self.area[1:]
+
+        # because we adjusted q_dynamic and velocity we need to correct here to allign the values
+        corrected_QSBC =  q_dynamic[:-1] / fsr[1:]
+
+        corrected_QSBC_kPa = corrected_QSBC / 1000
+
+        return corrected_QSBC_kPa
         
     def display_peak(self, fig_manager):
         """
@@ -195,18 +267,21 @@ class Peak:
         
         fig_manager.display(plot)
 
-
     def display_decel_vel_dep(self, fig_manager,  selected_spike=None):
         """
-        Displays the deceleration, velocity, and depth data in one plot
-        TODO incorporate this with QSBC QDYN stuff
+        Displays the deceleration, velocity, and depth data in one plot.
 
         Parameters
         ----------
+        fig_manager: FigureManager
+            The figure manager used to display the plot
         selected_spike: int
-            Optional x value for start of peak from graph. 
-            If not provided, assumes integration has already occurred
+            The x value of the spike where we will start to calculate values from if not provided will use the already assigned velocity and depth
+
         """
+
+        # TODO make sure if selected_spike is None velocity and depth exist
+
         if selected_spike is not None:
                 self._integrate_acceleration(selected_spike)
         
@@ -218,44 +293,36 @@ class Peak:
             ax.legend(loc='upper right')
 
         fig_manager.display(plot)
-
-    def is_valid_spike(self, spike):
-        return True
-
-    def find_area(self, tip_type='c', a_type='p', tip_length=7.87):
+        
+    def calculate_area_of_meter(self, tip_type='c', a_type='p'):
         """
+        Calculates the array of a penetrometer at each step.
+
         Parameters
         ----------
-        depth: numpy array
-            Array of depth values
         tip_type: str 
             Type of the tip ('c', 'b', or 'p')
         a_type: str 
             Area type ('m' or 'p')
-        tip_length: float
-            Length of the tip
-        
-        Return
-        ------
-        numpy array 
-            Area values for each depth
         """
-        depth = self.depth
-        depth_cm = np.array(depth) * 100  # Convert depth to cm
+
+        _, length = self._get_mass_length(tip_type)
+        
+        depth_cm = np.array(self.depth) * 100  # Convert depth to cm
         A1 = np.zeros(len(depth_cm))
         r = np.zeros(len(depth_cm))
         
         for k in range(len(depth_cm)):
             if tip_type == 'c':
                 if a_type == 'm':
-                    if depth_cm[k] < tip_length:
+                    if depth_cm[k] < length:
                         r[k] = depth_cm[k] * np.tan(np.radians(30))
                         A1[k] = np.pi * r[k] * (np.sqrt((r[k]**2) + (depth_cm[k]**2)))
                     else:
                         r[k] = 4.375
-                        A1[k] = np.pi * r[k] * (np.sqrt((r[k]**2) + (tip_length**2)))
+                        A1[k] = np.pi * r[k] * (np.sqrt((r[k]**2) + (length**2)))
                 elif a_type == 'p':
-                    if depth_cm[k] < tip_length:
+                    if depth_cm[k] < length:
                         r[k] = depth_cm[k] * np.tan(np.radians(30))
                         A1[k] = np.pi * r[k]**2
                     else:
@@ -265,16 +332,16 @@ class Peak:
             elif tip_type == 'b':
                 if a_type == 'm':
                     r[k] = 4.375
-                    if depth_cm[k] < tip_length:
+                    if depth_cm[k] < length:
                         A1[k] = np.pi * r[k]**2 + 2 * np.pi * r[k] * depth_cm[k]
                     else:
-                        A1[k] = np.pi * r[k]**2 + 2 * np.pi * r[k] * tip_length
+                        A1[k] = np.pi * r[k]**2 + 2 * np.pi * r[k] * length
                 elif a_type == 'p':
                     A1[k] = np.pi * 4.375**2
             
             elif tip_type == 'p':
                 if a_type == 'm':
-                    if depth_cm[k] < tip_length:
+                    if depth_cm[k] < length:
                         r[k] = np.sqrt(2.4184 * depth_cm[k])
                     else:
                         r[k] = 4.375
@@ -283,7 +350,7 @@ class Peak:
                     A1[k], _ = integrate.dblquad(polarfun, 0, 2 * np.pi, lambda _: 0, lambda _: r[k])
                 
                 elif a_type == 'p':
-                    if depth_cm[k] < tip_length:
+                    if depth_cm[k] < length:
                         r[k] = np.sqrt(2.4184 * depth_cm[k])
                         A1[k] = np.pi * r[k]**2
                     else:
@@ -293,4 +360,28 @@ class Peak:
             A1[k] = A1[k] / 10000  # Convert area to square meters
         
         self.area = A1
-        return A1
+    
+    def display_QSBC_for_K(self, fig_manager, correction_type, correction_factor, tip_type = 'c'):
+        """
+        Calculates and displays the quasi static bearing capacity for a given type, factor, and tip.
+
+        Parameters
+        ----------
+        correction_type: int
+            the type of correction either Log, Asinh, Beta
+        correction_factor: float
+            either the k or beta value to be used in calculation
+        tip_type: char
+            the type of tip the penetrometer has
+        """
+        qsbc_for_k = self._calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
+
+        def plot(ax):
+            ax.plot(qsbc_for_k)
+
+        fig_manager.display(plot)
+
+        
+
+    def is_valid_spike(self, spike):
+        return True
