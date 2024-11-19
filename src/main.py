@@ -121,7 +121,6 @@ def get_correction_factor(correction_type):
     return correction_factor
 
 def main():
-    
     # File selection UI
     file_select = FileSelectUI.FileSelectUI(on_select_file)
     file_select.create_ui()
@@ -150,20 +149,21 @@ def main():
     selected_peak.display_decel_vel_dep(fig_manager, spike_number)
     input("Press enter to continue.")   
 
-    selected_peak.find_area()
+    selected_peak.calculate_area_of_meter()
     
-    # Get input for type of correction
+    # Get input for type of correction log, asinh, or beta
     correction_type = get_correction_type()
 
     print(f'Correction type: {correction_type}')
 
-    # Get correction value either k or beta
+    # Get correction value either k or beta value
     correction_factor = get_correction_factor(correction_type)
 
     print(f'Correction factor: {correction_factor}')
 
     # Will also need to pass in the tip type when not using default to c
-    selected_peak.correct_QSBC(correction_type, correction_factor)
+    selected_peak.display_QSBC_for_K(fig_manager, correction_type, correction_factor)
+    input("Press enter to end the program.")  
 
 
 
