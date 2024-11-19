@@ -59,8 +59,6 @@ class Peak:
         self.depth = None
         self.selected_spike = None
         self.area = None
-        self.corrected_QSBC = None
-        self.correct_QSBC_kPa = None
 
     def _copy_from_BD_data(self, BD):
         # copies data from the BD_data object
@@ -121,7 +119,6 @@ class Peak:
             offset = self._get_meter_offset(meter_to_analyze) 
         self.peak = spliced_meter - offset
         
-
     def _get_meter_offset(self, meter):
         """
         Gets the y-value offset for a particular meter.
@@ -278,9 +275,11 @@ class Peak:
         fig_manager: FigureManager
             The figure manager used to display the plot
         selected_spike: int
-            The x value of the spike where we will start to calculate values from
+            The x value of the spike where we will start to calculate values from if not provided will use the already assigned velocity and depth
 
         """
+
+        # TODO make sure if selected_spike is None velocity and depth exist
 
         if selected_spike is not None:
                 self._integrate_acceleration(selected_spike)

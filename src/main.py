@@ -35,8 +35,8 @@ def save_to_csv():
 
 def prompt_user_for_num(input_msg, output_msg, is_valid, data_type="i"):
     """
-    Prompts the user for an interger.
-    Will continue to ask user for input until a valid integer is input.
+    Prompts the user for an integer or float.
+    Will continue to ask user for input until a valid input is provided.
 
     Parameters
     ----------
@@ -46,23 +46,25 @@ def prompt_user_for_num(input_msg, output_msg, is_valid, data_type="i"):
         The prompt displayed to the user after valid input is entered
     is_valid: function
         A function that returns true if the input is valid for the context
+    data_type: char
+        The type of input expected from the user, defaults to integer
     """
     invalid = True
     while invalid:
         # prompt user to select peaks
         selection = input(input_msg)
-        # attempt to convert input to an integer
         try:
+            # get the value the user entered for the specific data type
             if data_type != 'i':
                 selection = float(selection)
             else:
-                # get the value the user entered
                 selection = int(selection)
 
             # validate the users input
             if is_valid(selection):
-                # if valid queue the selection and output that the value is okay
+                # if valid alert user and return value
                 invalid = False
+                print(output_msg)
                 return selection
             else:
                 print(f'{selection} is not a valid choice!')
