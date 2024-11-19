@@ -348,7 +348,7 @@ class Peak:
                         r[k] = 4.375
                     
                     polarfun = lambda theta, r: r * np.sqrt(0.745 * r**2 + 1)
-                    A1[k], _ = dblquad(polarfun, 0, 2 * np.pi, lambda _: 0, lambda _: r[k])
+                    A1[k], _ = integrate.dblquad(polarfun, 0, 2 * np.pi, lambda _: 0, lambda _: r[k])
                 
                 elif a_type == 'p':
                     if depth_cm[k] < length:
