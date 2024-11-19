@@ -2,7 +2,6 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import integrate
-from scipy.integrate import dblquad
 
 # Represents a peak where the penetrometer has hit the ground
 class Peak:
