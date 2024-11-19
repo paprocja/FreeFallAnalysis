@@ -156,12 +156,13 @@ class Peak:
         float:
             the length of a meter
         """
-        if tip_type == 'c':            
-            return 7.71, 7.87
+        if tip_type == 'b':            
+            return 10.30, 8.57
         elif tip_type ==  'e':
             return 9.15, 8.26
-        elif 'b': 
-            return 10.30, 8.57
+        else : 
+            return 7.71, 7.87
+
 
     def _find_end_of_drop(self):
         """
