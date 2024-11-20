@@ -414,8 +414,7 @@ class Peak:
             the type of tip the penetrometer has
         """
         qsbc_for_k = self._calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
-        print("QSBC FOR K\n")
-        print(qsbc_for_k)
+
         def plot(ax):
             ax.plot(qsbc_for_k)
 
