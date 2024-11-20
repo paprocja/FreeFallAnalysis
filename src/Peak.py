@@ -252,6 +252,46 @@ class Peak:
         corrected_QSBC_kPa = corrected_QSBC / 1000
 
         return corrected_QSBC_kPa
+    
+    def _calculate_average_qsbc(self, correction_type, start_k, end_k, start_range, end_range, tip_type = 'c'):
+        """
+        Returns the average QSBC between two given strain-rate factors
+
+        Parameters
+        ----------
+        correction_type: int
+            the type of correction either Log, Asinh, Beta
+        start_k: float
+            the lower k value for the averaged range
+        end_k: float
+            the higher k value for the averaged range
+        start_range: integer
+            starting value of array to be used in calculation
+        end_range: integer
+            ending value of array to be used in calculation
+        tip_type: char
+            the type of tip the penetrometer has
+
+        Return
+        ------
+        numpy array
+            the average qsbc between the two given strain-rate factors
+        """
+        # Calculates lower bound array
+        val1 = self._calculate_QSBC_for_K(correction_type, start_k, tip_type)
+        # Calculates higher bound array
+        val2 = self._calculate_QSBC_for_K(correction_type, end_k, tip_type)
+
+        # Cuts off unneeded values
+        val1r = val1[start_range - 2:end_range - 1]
+        val2r = val2[start_range - 2:end_range - 1]
+
+        #Finds average between arrays
+        ave = (val1r + val2r) / 2
+        
+        return ave
+
+
         
     def display_peak(self, fig_manager):
         """
@@ -374,7 +414,8 @@ class Peak:
             the type of tip the penetrometer has
         """
         qsbc_for_k = self._calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
-
+        print("QSBC FOR K\n")
+        print(qsbc_for_k)
         def plot(ax):
             ax.plot(qsbc_for_k)
 

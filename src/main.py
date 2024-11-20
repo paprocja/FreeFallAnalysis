@@ -133,7 +133,7 @@ def get_correction_factor(correction_type: int) -> float:
         prompt_msg = "Enter in a beta value between 0.035 and 0.085.\n"
         happy_msg = "Valid beta value.\n"
         # prompt user for beta value
-        correction_factor = prompt_user_for_num(prompt_msg, happy_msg, is_valid_beta, 'f')
+        correction_factor = prompt_user_for_num(prompt_msg, fhappy_msg, is_valid_beta, 'f')
     else:
         # Start a UI thread to get k value
         prompt_msg = "Enter in a k value between 0 and 1.5.\n"
@@ -141,6 +141,27 @@ def get_correction_factor(correction_type: int) -> float:
         correction_factor = prompt_user_for_num(prompt_msg, happy_msg, is_valid_k, 'f')
 
     return correction_factor
+
+
+def get_range_vals():
+    def is_valid_start(start):
+        if start >= 0 and start <= 86:
+            return True
+        else:
+            return False
+        
+    start = prompt_user_for_num(f"Start time stamp?\n", "Valid starting point\n", is_valid_start)
+        
+    def is_valid_end(end, start=start):
+        if end > start and end <= 86:
+            return True
+        else:
+            return False
+
+    
+    end = prompt_user_for_num(f"End time stamp?\n", "Valid ending point", is_valid_end)
+
+    return start, end
 
 def main():
     # Starts file selection UI
@@ -174,6 +195,14 @@ def main():
 
     # Will also need to pass in the tip type when not using default to c
     peak.display_QSBC_for_K(fig_manager, correction_type, 1.5)
+    input("Press enter to continue.")  
+    
+    # Tuple used to find start and end values. Could be changed so parameters are not needed for average calculation
+    start, end = get_range_vals()
+
+    # Currently hard coded to use values 1 and 1.5, but whatever values are needed for graph can be used
+    peak._calculate_average_qsbc(correction_type, 1, 1.5, start, end)
+
     input("Press enter to end the program.")  
 
 
