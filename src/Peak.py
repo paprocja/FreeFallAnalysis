@@ -267,7 +267,7 @@ class Peak:
         
         fig_manager.display(plot)
 
-    def display_decel_vel_dep(self, fig_manager,  selected_spike=None):
+    def display_decel_vel_dep(self, fig_manager, selected_spike=None):
         """
         Displays the deceleration, velocity, and depth data in one plot.
 
@@ -281,12 +281,11 @@ class Peak:
         """
 
         # TODO make sure if selected_spike is None velocity and depth exist
-
         if selected_spike is not None:
                 self._integrate_acceleration(selected_spike)
+                self._calculate_area_of_meter()
         
         def plot(ax):
-            end = self.depth[-1]
             ax.invert_yaxis()
             ax.plot(self.decelleration, self.depth, label='decel')
             ax.plot(self.velocity, self.depth, label='vel')
@@ -294,7 +293,7 @@ class Peak:
 
         fig_manager.display(plot)
         
-    def calculate_area_of_meter(self, tip_type='c', a_type='p'):
+    def _calculate_area_of_meter(self, tip_type='c', a_type='p'):
         """
         Calculates the array of a penetrometer at each step.
 
