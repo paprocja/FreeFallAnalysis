@@ -245,7 +245,7 @@ class Peak:
 
         # the first value in the area array is 0
         q_dynamic = force_bouyancy[1:] / self.area[1:]
-
+        self.qdyn = q_dynamic
         # because we adjusted q_dynamic and velocity we need to correct here to allign the values
         corrected_QSBC =  q_dynamic[:-1] / fsr[1:]
 
@@ -289,7 +289,7 @@ class Peak:
         #Finds average between arrays
         ave = (val1r + val2r) / 2
         
-        return ave
+        return val1r, val2r, ave
 
 
         
@@ -418,6 +418,26 @@ class Peak:
         print(qsbc_for_k)
         def plot(ax):
             ax.plot(qsbc_for_k)
+
+        fig_manager.display(plot)
+
+
+    def display_correction_QSBC(self, fig_manager, correction_type, start, end):
+
+        line1val1, line1val2, line1ave = self._calculate_average_qsbc(correction_type, 1.0, 1.5, start, end)
+        line2val1, line2val2, line2ave = self._calculate_average_qsbc(correction_type, 0.1, 0.2, start, end)
+        depth = self.depth[start:end+1]*100
+        def plot(ax):
+            
+            ax.plot(line1ave, depth, label='Line 1 Average')
+            ax.invert_yaxis()
+            ax.fill_betweenx(depth, line1val1, line1val2, color='grey', alpha=0.3, label='shaded correction 1')
+            
+            ax.plot(line2ave, depth, label='line 2 Average')
+            ax.fill_betweenx(depth, line2val1, line2val2, color='grey', alpha=0.3, label='shaded correction 1')
+
+            ax.plot(self.qdyn[start:end+1]/1000, depth, label='dynamic')
+
 
         fig_manager.display(plot)
 
