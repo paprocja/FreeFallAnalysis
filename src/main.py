@@ -133,7 +133,7 @@ def get_correction_factor(correction_type: int) -> float:
         prompt_msg = "Enter in a beta value between 0.035 and 0.085.\n"
         happy_msg = "Valid beta value.\n"
         # prompt user for beta value
-        correction_factor = prompt_user_for_num(prompt_msg, fhappy_msg, is_valid_beta, 'f')
+        correction_factor = prompt_user_for_num(prompt_msg, happy_msg, is_valid_beta, 'f')
     else:
         # Start a UI thread to get k value
         prompt_msg = "Enter in a k value between 0 and 1.5.\n"
