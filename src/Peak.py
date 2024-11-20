@@ -208,7 +208,7 @@ class Peak:
 
     def _calculate_QSBC_for_K(self, correction_type, correction_factor, tip_type):
         """
-        Corrects the quasi static bearing capacity to be standardized with other researchers.
+        Calculates standardized quasi static bearing capacity based on type, factor, and tip.
 
         Parameters
         ----------
