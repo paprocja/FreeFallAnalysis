@@ -245,7 +245,7 @@ class Peak:
 
         # the first value in the area array is 0
         q_dynamic = force_bouyancy[1:] / self.area[1:]
-
+        self.qdyn = q_dynamic
         # because we adjusted q_dynamic and velocity we need to correct here to allign the values
         corrected_QSBC =  q_dynamic[:-1] / fsr[1:]
 
@@ -289,7 +289,7 @@ class Peak:
         #Finds average between arrays
         ave = (val1r + val2r) / 2
         
-        return ave
+        return val1r, val2r, ave
 
 
         
@@ -298,9 +298,10 @@ class Peak:
         Displays the peak using the figure manager.
         """
         def plot(ax):
-            ax.plot(self.peak)
-            ax.plot(self.g2g)
+            ax.plot(self.peak, label='peak')
+            ax.plot(self.g2g, label ='2g')
             ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
+            ax.legend(loc='upper right')
             ax.set_title(f"Peak at {self.peak_center}")
             ax.set_xlabel("Sample")
             ax.set_ylabel("Value")
@@ -327,8 +328,12 @@ class Peak:
         
         def plot(ax):
             ax.invert_yaxis()
-            ax.plot(self.decelleration, self.depth, label='decel')
-            ax.plot(self.velocity, self.depth, label='vel')
+            ax.set_ylim(max(self.depth), 0)
+            ax.set_xlim(0, max(max(self.decelleration), max(self.velocity)))
+            ax.plot(self.decelleration, self.depth, linestyle='-', label='Deceleration')
+            ax.plot(self.velocity, self.depth, linestyle='--', label='Velocity')
+            ax.set_ylabel('Depth [Meters]')
+            ax.set_xlabel('Deceleratoin [g] // Velocity [m/s]')
             ax.legend(loc='upper right')
 
         fig_manager.display(plot)
@@ -416,9 +421,57 @@ class Peak:
         qsbc_for_k = self._calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
 
         def plot(ax):
-            ax.plot(qsbc_for_k)
+            ax.plot(qsbc_for_k, label='QSBC')
+            ax.set_xlabel('Bearing Capacity')
+            ax.set_ylabel('Depth')
+            ax.set_title('Depth x Bearing Capacity')
+            ax.legend(loc='upper right')
 
         fig_manager.display(plot)
+
+
+    def display_correction_QSBC(self, fig_manager, correction_type, start, end):
+
+        line1val1, line1val2, line1ave = self._calculate_average_qsbc(correction_type, 1.0, 1.5, start, end)
+        line2val1, line2val2, line2ave = self._calculate_average_qsbc(correction_type, 0.2, 0.4, start, end)
+        depth = self.depth[start:end+1]*100
+        def plot(ax):
+
+            #plot the decel and velocity to the left side of figure
+            ax[0].invert_yaxis()
+            ax[0].set_ylim(max(self.depth), 0)
+            ax[0].set_xlim(0, max(max(self.decelleration), max(self.velocity)))
+            ax[0].plot(self.decelleration, self.depth, linestyle='-', label='Deceleration')
+            ax[0].plot(self.velocity, self.depth, linestyle='--', label='Velocity')
+            ax[0].set_ylabel('Depth [Neters]')
+            ax[0].set_xlabel('Deceleratoin [g] // Velocity [m/s]')
+            ax[0].legend(loc='upper right')
+            
+
+            #Plot the Correction averages and the dynamic on the right side of figure
+            ax[1].invert_yaxis()
+            ax[1].set_ylim(max(depth), 0)
+            ax[1].set_xlim(0, max(max(line1ave), max(line2ave), max(self.qdyn[start:end+1])/1000))
+            
+            #first correciton average line
+            ax[1].plot(line1ave, depth, label='QSBC(av) k = 1.0 & 1.5')
+            ax[1].fill_betweenx(depth, line1val1, line1val2, color='grey', alpha=0.3)
+
+            #second correction average line
+            ax[1].plot(line2ave, depth, label='QSBC(av) k = 0.2 & 0.4')
+            ax[1].fill_betweenx(depth, line2val1, line2val2, color='grey', alpha=0.3)
+            
+            #plot the dynamic bearing capacity
+            ax[1].plot(self.qdyn[start:end+1]/1000, depth, label='Qdyn')
+            
+            ax[1].set_xlabel('QSBC [kPa]')
+            ax[1].set_ylabel('Depth [CM]')
+            ax[1].set_title('QSBC corrections & Q_dynamic')
+            ax[1].legend(loc='upper right')
+
+
+
+        fig_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
 
         
 
