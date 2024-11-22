@@ -1,54 +1,55 @@
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
+import numpy as np  # numpy needed to support the change from single ax to multiple
 
 class FigureManager:
     def __init__(self, figsize=(12, 6)):
-        self.fig, self.ax = plt.subplots(figsize=figsize)
+        self.fig, self.ax = plt.subplots(figsize=figsize)  # Create the figure and axes once
         self.buttons = []  # Store references to dynamically created buttons
 
     def clear(self):
         """
-        Clears the current axes to prepare for new data.
+        Clears the current axes and resets the figure. 
+
+        Clears the ax if it has multiple axes or just one
         """
-        self.ax.clear()
+        if isinstance(self.ax, (list, np.ndarray)):  # Handle multiple axes
+            for sub_ax in self.ax:
+                sub_ax.clear()
+        else:
+            self.ax.clear()
+
         for button in self.buttons:
-            button.ax.remove()
+            button.ax.remove()  # Remove buttons from the figure
         self.buttons.clear()
 
-    def display(self, plot_function, *args, **kwargs):
+    def display(self, plot_function, nrows=1, ncols=1, *args, **kwargs):
         """
-        Displays the plot by calling a provided plot function.
+        Displays the plot with subplots if specified.
 
         Parameters
         ----------
         plot_function: callable
-            A function that takes the axes object and any additional arguments.
+            A function that takes axes and any additional arguments.
+        nrows: int
+            Number of rows of subplots.
+        ncols: int
+            Number of columns of subplots.
         """
-        self.clear()
+        # Update layout only if it changes
+        if nrows * ncols != (len(self.ax) if isinstance(self.ax, np.ndarray) else 1):
+            # Clear existing figure content
+            self.fig.clear()
+
+            # Create new subplots with the specified layout
+            self.ax = self.fig.subplots(nrows=nrows, ncols=ncols, squeeze=False)
+            self.ax = self.ax.flatten()  # Flatten for easy indexing
+        else:
+            self.clear()  # Clear existing content for reuse
+
         plot_function(self.ax, *args, **kwargs)
+
+        self.fig.tight_layout()
         self.fig.canvas.draw_idle()
         plt.show(block=False)
 
-
-    def add_peak_buttons(self, peaks, callback):
-        
-        """
-        ---------    NOT IN USE FOR NOW    ---------
-
-        Adds a button for each peak to the figure for interaction.
-
-        Parameters
-        ----------
-        peaks: list
-            List of peak numbers to create buttons for.
-        callback: callable
-            A function to call with the peak number when the button is pressed.
-        """
-        button_width = 0.1
-        button_height = 0.05
-        for i, peak in enumerate(peaks):
-            position = [0.01 + i * (button_width + 0.01), 0.01, button_width, button_height]
-            ax_button = self.fig.add_axes(position)
-            button = Button(ax_button, f"Peak {peak}")
-            button.on_clicked(lambda event, peak=peak: callback(peak))
-            self.buttons.append(button)

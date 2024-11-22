@@ -201,7 +201,8 @@ def main():
     start, end = get_range_vals()
 
     # Currently hard coded to use values 1 and 1.5, but whatever values are needed for graph can be used
-    peak._calculate_average_qsbc(correction_type, 1, 1.5, start, end)
+    peak.display_correction_QSBC(fig_manager, correction_type, start, end)
+    # peak._calculate_average_qsbc(correction_type, 1, 1.5, start, end)
 
     input("Press enter to end the program.")  
 
