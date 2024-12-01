@@ -333,7 +333,7 @@ class Peak:
             ax.plot(self.decelleration, self.depth, linestyle='-', label='Deceleration')
             ax.plot(self.velocity, self.depth, linestyle='--', label='Velocity')
             ax.set_ylabel('Depth [Meters]')
-            ax.set_xlabel('Deceleratoin [g] // Velocity [m/s]')
+            ax.set_xlabel('Deceleration [g] // Velocity [m/s]')
             ax.legend(loc='upper right')
 
         fig_manager.display(plot)
@@ -444,7 +444,7 @@ class Peak:
             ax[0].plot(self.decelleration, self.depth, linestyle='-', label='Deceleration')
             ax[0].plot(self.velocity, self.depth, linestyle='--', label='Velocity')
             ax[0].set_ylabel('Depth [Neters]')
-            ax[0].set_xlabel('Deceleratoin [g] // Velocity [m/s]')
+            ax[0].set_xlabel('Deceleration [g] // Velocity [m/s]')
             ax[0].legend(loc='upper right')
             
 
