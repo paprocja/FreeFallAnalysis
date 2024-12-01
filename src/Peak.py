@@ -443,7 +443,7 @@ class Peak:
             ax[0].set_xlim(0, max(max(self.decelleration), max(self.velocity)))
             ax[0].plot(self.decelleration, self.depth, linestyle='-', label='Deceleration')
             ax[0].plot(self.velocity, self.depth, linestyle='--', label='Velocity')
-            ax[0].set_ylabel('Depth [Neters]')
+            ax[0].set_ylabel('Depth [Meters]')
             ax[0].set_xlabel('Deceleration [g] // Velocity [m/s]')
             ax[0].legend(loc='upper right')
             
