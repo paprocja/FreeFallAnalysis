@@ -12,12 +12,11 @@ class FileSelectUI:
         self.root.quit()
 
     def on_button_click(self):
-        # get the file path from the users selection
-        file_path = filedialog.askopenfilename(title="Select a file")
-
+        # get a tuple of file paths from the user selection
+        file_paths = filedialog.askopenfilenames(title="Select .bin file(s)")
         try:
             # run the command to get the data from the file
-            self.command(file_path, int(self.selected_option.get()))
+            self.command(file_paths, int(self.selected_option.get()))
         finally:
             self.dispose()
 

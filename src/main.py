@@ -11,14 +11,14 @@ bd_data = None
 # FigureManager Object to handle all of our plot figures
 fig_manager = FigureManager()
 
-# Create a BD_Data object once a file has been selected by the UI component
-def on_select_file(file_path, bdid):
+# Create a BD_Data object once a file has been selected by the UI component 
+def on_select_file(file_paths, bdid):
     """
     Creates a BD_Data object from the selected file    
     """
     global bd_data
-    bd_data = BD_Data(file_path, bdid)
-    
+    bd_data = BD_Data(file_paths, bdid)
+
 def save_to_csv():
     """
     Writes output of binary data to CSV file
