@@ -85,10 +85,35 @@ def select_peak() -> Peak:
     selected_peak = Peak(peak_num=peak_number-1, BD=bd_data)
     return selected_peak
 
-def select_spike(peak: Peak) -> int:
+def select_spike(peak: Peak, fig_manager: FigureManager) -> int:
     prompt_msg = f"Select a spike within the peak:\n"
     happy = "Valid spike selected.\n"
-    return prompt_user_for_num(prompt_msg, happy, peak.is_valid_spike)
+    val = prompt_user_for_num(prompt_msg, happy, peak.is_valid_spike)
+
+    user_happy = confirm_input(peak, val, fig_manager)
+
+    while (user_happy is False):
+        peak.display_peak(fig_manager)
+        val = prompt_user_for_num(prompt_msg, happy, peak.is_valid_spike)
+        user_happy = confirm_input(peak, val, fig_manager)
+
+    return val
+
+def confirm_input(peak: Peak, val, fig_manager) -> bool:
+    def is_valid_confirmation(val):
+        if (val == 1 or val == 0):
+            return True
+        return False
+    peak.display_selected_data(val, fig_manager)
+    prompt_msg = f"Would you like to confirm this input? (1 for yes, 0 for no)\n"
+    happy = ""
+    return_val = prompt_user_for_num(prompt_msg, happy, is_valid_confirmation)
+    if (return_val == 0):
+        return False
+    return True
+
+
+
 
 def get_correction_type() -> int:
     """
@@ -181,7 +206,7 @@ def main():
     peak.display_peak(fig_manager)
 
     # Once peak is selected, prompt user to select a spike within the peak
-    spike = select_spike(peak)
+    spike = select_spike(peak, fig_manager)
     peak.display_decel_vel_dep(fig_manager, spike)
 
     # Get input for type of correction log, asinh, or beta

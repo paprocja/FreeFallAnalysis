@@ -474,6 +474,23 @@ class Peak:
         fig_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
 
         
+    def display_selected_data(self, val, fig_manager):
+        """
+        Displays the peak using the figure manager.
+        """
+        print(val)
+        def plot(ax):
+            print(val)
+            ax.plot(self.peak, label='peak')
+            ax.plot(self.g2g, label ='2g')
+            ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
+            ax.legend(loc='upper right')
+            ax.set_title(f"Peak at {self.peak_center}")
+            ax.set_xlabel("Sample")
+            ax.set_ylabel("Value")
+            plt.plot(val, self.peak[val], 'rx')
+        
+        fig_manager.display(plot)
 
     def is_valid_spike(self, spike):
         return True
