@@ -49,7 +49,7 @@ def validate_penetrometer_file(file_path):
     Returns True on success, raises an Exception on error.
     """
     if '.csv' in file_path:
-                raise Exception(f'Error: Support for csv is not yet implemented.\nFile: {file_path} will not work.\nPlease select .bin files.')
+        raise Exception(f'Error: Support for csv is not yet implemented.\nFile: {file_path} will not work.\nPlease select .bin files.')
     elif not '.bin' in file_path:
         raise Exception(f"Error: {file_path} is not a .csv or .bin file. Please try again!")
     elif not PREFIX in file_path:
