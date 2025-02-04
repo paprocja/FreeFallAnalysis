@@ -233,7 +233,7 @@ class Peak:
         if correction_type == 1:
             # Logarithmic
             fsr = np.array([1 + correction_factor * math.log10(v) for v in corrected_velocity])
-        elif correction_factor == 2:
+        elif correction_type == 2:
             # Asinh
             k_prime = correction_factor / math.log(10)
             fsr = np.array([1 + k_prime * math.asinh(v) for v in corrected_velocity])
