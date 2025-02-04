@@ -26,7 +26,7 @@ def stitch_files(file_paths):
     
     # If the file name is too long, shorten it to "first-to-last.bin"
     MAX_PATH = 260 # On windows systems, there is a hard limit to the number of characters that can go in a file name.
-    if len(new_file_name) > MAX_PATH - 4: # -4 for .bin suffix
+    if len(new_file_name) + len(os.getcwd()) > MAX_PATH - 4: # -4 for .bin suffix
         new_file_name = f'{file_names[0][:-4]}-to-{file_names[-1][:-4]}'
     file_path = f'./temp/{new_file_name}.bin'
 
@@ -37,24 +37,23 @@ def stitch_files(file_paths):
     final_matrix.tofile(file_path, sep="")
     print(f"binary_utils.py: Combined file created at {file_path}.")
     print('WARNING: If you have uploaded multiple files that are not chronologically associated, '
-        'then this analysis will have undefined behavior. Please only uploade files that were recorded together. '
+        'then this analysis will have undefined behavior. Please only upload files that were recorded together. '
         'The program will automatically sort these files into the correct order (ascending based on the hexidecimal tag in the file name).')
     return file_path
 
-PREFIX = 'bLog'
+PREFIX = 'bLog' # Represents the file prefix before the hexidecimal number. Is likely 'bLog' for everything, but can be changed just in case.
 def validate_penetrometer_file(file_path):
     """
     Validates a penetrometer file by checking for PREFIX and '.bin'.
     Also checks against .csv.
-    Returns True on success, raises an Exception on error.
+    Raises an Exception on error.
     """
     if '.csv' in file_path:
         raise Exception(f'Error: Support for csv is not yet implemented.\nFile: {file_path} will not work.\nPlease select .bin files.')
-    elif not '.bin' in file_path:
+    if not '.bin' in file_path:
         raise Exception(f"Error: {file_path} is not a .csv or .bin file. Please try again!")
-    elif not PREFIX in file_path:
+    if not PREFIX in file_path:
         raise Exception(f"{file_path} doesn't contain {PREFIX}. Are you sure this is binary penetrometer data?")
-    return True
 
 def sort_by_hex(file_paths):
     """
@@ -80,8 +79,6 @@ def load_penetrometer_data(file_path):
     validate_penetrometer_file(file_path)
 
     # converts tuple of files to single file, if only one file is selected
-    if not isinstance(file_path, str):
-        file_path = file_path[0]
     data = np.fromfile(file_path, dtype=np.uint8)  # Read data as unsigned 8-bit integers (bytes)
 
     # Reshape the data to handle 3 bytes per sample
