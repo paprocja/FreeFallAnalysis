@@ -68,6 +68,8 @@ class Peak:
         self.g50g = BD.g50g[self.start:self.end+1].copy()
         self.g18g = BD.g18g[self.start:self.end+1].copy()
         self.g2g = BD.g2g[self.start:self.end+1].copy()
+        self.gX55g = BD.gX55g[self.start:self.end+1].copy()
+        self.gY55g = BD.gY55g[self.start:self.end+1].copy()
         # Grabs the x,y values of the peak. 
         # Offsets the x value to be in terms of the peak.
         self.peak_height = BD.g250g[self.peak_center]
