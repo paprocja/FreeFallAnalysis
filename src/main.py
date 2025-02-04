@@ -4,7 +4,7 @@ import os
 from BD_Data import BD_Data
 from Peak import Peak
 from FigureManager import FigureManager
-
+from TiltCalculator import calculate_tilt
 
 # BD_Data object with parsed data from binary file
 bd_data = None
@@ -203,6 +203,10 @@ def main():
     # Currently hard coded to use values 1 and 1.5, but whatever values are needed for graph can be used
     peak.display_correction_QSBC(fig_manager, correction_type, start, end)
     # peak._calculate_average_qsbc(correction_type, 1, 1.5, start, end)
+
+    tilt_x, tilt_y = calculate_tilt(spike, peak.end_of_drop, peak.gX55g, peak.gY55g)
+
+    print(f'Tilt x: {tilt_x}, Tilt y: {tilt_y}')
 
     input("Press enter to end the program.")  
 
