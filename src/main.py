@@ -90,21 +90,21 @@ def select_spike(peak: Peak, fig_manager: FigureManager) -> int:
     happy = "Valid spike selected.\n"
     val = prompt_user_for_num(prompt_msg, happy, peak.is_valid_spike)
 
-    user_happy = confirm_input(peak, val, fig_manager)
+    user_happy = confirm_input_spike(peak, val, fig_manager)
 
     while (user_happy is False):
         peak.display_peak(fig_manager)
         val = prompt_user_for_num(prompt_msg, happy, peak.is_valid_spike)
-        user_happy = confirm_input(peak, val, fig_manager)
+        user_happy = confirm_input_spike(peak, val, fig_manager)
 
     return val
 
-def confirm_input(peak: Peak, val, fig_manager) -> bool:
+def confirm_input_spike(peak: Peak, val, fig_manager) -> bool:
     def is_valid_confirmation(val):
         if (val == 1 or val == 0):
             return True
         return False
-    peak.display_selected_data(val, fig_manager)
+    peak.display_selected_peak(val, fig_manager)
     prompt_msg = f"Would you like to confirm this input? (1 for yes, 0 for no)\n"
     happy = ""
     return_val = prompt_user_for_num(prompt_msg, happy, is_valid_confirmation)
@@ -168,7 +168,7 @@ def get_correction_factor(correction_type: int) -> float:
     return correction_factor
 
 
-def get_range_vals():
+def get_range_vals(peak: Peak, correction_type, correction_factor):
     def is_valid_start(start):
         if start >= 0 and start <= 86:
             return True
@@ -182,11 +182,39 @@ def get_range_vals():
             return True
         else:
             return False
-
-    
+            
     end = prompt_user_for_num(f"End time stamp?\n", "Valid ending point", is_valid_end)
 
+    user_happy = confirm_input_range(peak, start, end, correction_type, correction_factor, fig_manager)
+
+    while (user_happy is False):
+        peak.display_QSBC_for_K(fig_manager, correction_type, correction_factor)
+
+        start = prompt_user_for_num(f"Start time stamp?\n", "Valid starting point\n", is_valid_start)
+        end = prompt_user_for_num(f"End time stamp?\n", "Valid ending point", is_valid_end)
+
+
+
+        user_happy = confirm_input_range(peak, start, end, correction_type, correction_factor, fig_manager)
+
     return start, end
+
+def confirm_input_range(peak: Peak, valStart, valEnd, correction_type, correction_factor, fig_manager) -> bool:
+    def is_valid_confirmation(val):
+        if (val == 1 or val == 0):
+            return True
+        return False
+    
+    peak.display_selected_range(valStart, valEnd, fig_manager, correction_type, correction_factor, fig_manager)
+
+    prompt_msg = f"Would you like to confirm this range? (1 for yes, 0 for no)\n"
+    happy = ""
+    return_val = prompt_user_for_num(prompt_msg, happy, is_valid_confirmation)
+    if (return_val == 0):
+        return False
+    return True
+
+
 
 def main():
     # Starts file selection UI
@@ -223,7 +251,7 @@ def main():
     input("Press enter to continue.")  
     
     # Tuple used to find start and end values. Could be changed so parameters are not needed for average calculation
-    start, end = get_range_vals()
+    start, end = get_range_vals(peak, correction_type, 1.5)
 
     # Currently hard coded to use values 1 and 1.5, but whatever values are needed for graph can be used
     peak.display_correction_QSBC(fig_manager, correction_type, start, end)
