@@ -38,15 +38,14 @@ class Peak:
             # Peak is at the beginning of the file
             self.start = 0
             self.end = self.peak_center + 500
-        elif self.peak_center > 119500:
-            # Peak is in the middle of file
+        elif self.peak_center > BD.data.shape[0]-500: # previously > 119500
+            # Peak is close to the end of file
             self.start = self.peak_center - 1500
             self.end = BD.data.size
         else:
-            # Peak is close to the end of file
+            # Peak is in the middle of file
             self.start = self.peak_center - 1500
             self.end = self.peak_center + 500
-
         # performs all calculations available at time of creation
         self._copy_from_BD_data(BD)    
         self._set_peak(BD)
@@ -61,7 +60,9 @@ class Peak:
         self.area = None
 
     def _copy_from_BD_data(self, BD):
-        # copies data from the BD_data object
+        """
+        copies data from the BD_data object
+        """
         self.data = BD.data[self.start:self.end+1].copy()
         self.g250g = BD.g250g[self.start:self.end+1].copy()
         self.g200g = BD.g200g[self.start:self.end+1].copy()
@@ -119,6 +120,7 @@ class Peak:
         # Stores the peak as an array offset for integration
         if offset is None:
             offset = self._get_meter_offset(meter_to_analyze) 
+
         self.peak = spliced_meter - offset
         
     def _get_meter_offset(self, meter):
