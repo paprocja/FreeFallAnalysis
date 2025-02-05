@@ -34,3 +34,7 @@ python3 main.py
 
 The data will automatically be saved to the F_Matrix.csv file under the `\output` directory.
 The accelerometer data, ppm, and raw data matrices will be output to stdout in the terminal.
+
+## Known issues
+
+- If this package is located deep within the file system of your computer, then you may experience issues with selecting multiple files.
