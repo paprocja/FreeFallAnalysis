@@ -59,10 +59,12 @@ class FigureManager:
 
         plot_function(self.ax, *args, **kwargs)
 
+        plt.subplots_adjust(bottom=0.1)
+
         if display_type:
             self.setup_widgets(display_type)
 
-        self.fig.tight_layout()
+        self.fig.tight_layout(rect=[0, 0.1,1,1])
         self.fig.canvas.draw_idle()
         plt.show(block=False)
 
