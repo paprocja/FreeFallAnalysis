@@ -78,11 +78,18 @@ def select_peak() -> Peak:
     selected_peak: Peak
         Peak object representing selected peak
     """
-    options = [i+1 for i in range(bd_data.number_peaks)]
-    prompt_msg = f"Select a peak {options}:\n"
-    happy_msg = "Valid peak selected.\n"
-    peak_number = prompt_user_for_num(prompt_msg, happy_msg, bd_data.is_valid_peak)
-    selected_peak = Peak(peak_num=peak_number-1, BD=bd_data)
+    # options = [i+1 for i in range(bd_data.number_peaks)]
+    # prompt_msg = f"Select a peak {options}:\n"
+    # happy_msg = "Valid peak selected.\n"
+    # peak_number = prompt_user_for_num(prompt_msg, happy_msg, bd_data.is_valid_peak)
+    # selected_peak = Peak(peak_num=peak_number-1, BD=bd_data)
+
+    fig_manager.wait_for_input()
+    
+    if fig_manager.selected_peak_number is not None:
+        # Proceed with using the selected peak
+        selected_peak = Peak(peak_num=fig_manager.selected_peak_number - 1, BD=bd_data)
+    
     return selected_peak
 
 def select_spike(peak: Peak, fig_manager: FigureManager) -> int:

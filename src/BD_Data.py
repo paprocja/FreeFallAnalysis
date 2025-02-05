@@ -198,7 +198,7 @@ class BD_Data:
             ax.set_ylabel('Deceleration (g)')
             ax.set_title('Initial Data Visualization')
 
-        fig_manager.display(plot)
+        fig_manager.display(plot, display_type='peak_selection')
 
 
     def save_data(self, file_path):

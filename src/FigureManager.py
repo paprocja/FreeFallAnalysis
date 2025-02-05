@@ -1,11 +1,17 @@
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Button
+from matplotlib.widgets import Button, TextBox
+# from BD_Data import is_valid_peak
 import numpy as np  # numpy needed to support the change from single ax to multiple
 
 class FigureManager:
     def __init__(self, figsize=(12, 6)):
         self.fig, self.ax = plt.subplots(figsize=figsize)  # Create the figure and axes once
         self.buttons = []  # Store references to dynamically created buttons
+        self.textboxes = []
+        self.selected_peak_number = None #used for returning the value from the button
+        self.is_ready = False # flag for if ready to go to next display (has input value)
+    
+
 
     def clear(self):
         """
@@ -23,7 +29,11 @@ class FigureManager:
             button.ax.remove()  # Remove buttons from the figure
         self.buttons.clear()
 
-    def display(self, plot_function, nrows=1, ncols=1, *args, **kwargs):
+        for textbox in self.textboxes:
+            textbox.ax.remove()
+        self.textboxes.clear()
+
+    def display(self, plot_function, nrows=1, ncols=1, display_type=None, *args, **kwargs):
         """
         Displays the plot with subplots if specified.
 
@@ -49,7 +59,45 @@ class FigureManager:
 
         plot_function(self.ax, *args, **kwargs)
 
+        if display_type:
+            self.setup_widgets(display_type)
+
         self.fig.tight_layout()
         self.fig.canvas.draw_idle()
         plt.show(block=False)
 
+
+    def setup_widgets(self, display_type):
+        # Define widget setups based on display type
+        if display_type == 'peak_selection':
+            self.add_peak_selection_widgets()
+        elif display_type == 'spike_selection': #todo implement this
+            self.add_spike_selection_widgets()
+        elif display_type == 'correction_type': # todo implement this
+            self.add_correction_type_widgets()
+
+    def add_peak_selection_widgets(self):
+        # Setup widgets specific for peak selection
+        axbox = plt.axes([0.1, 0.05, 0.1, 0.05])
+        textbox = TextBox(axbox, 'Enter Peak #')
+        self.textboxes.append(textbox)
+        axbutton = plt.axes([0.21, 0.05, 0.1, 0.05])
+        button = Button(axbutton, 'Submit')
+        self.buttons.append(button)
+        button.on_clicked(self.on_peak_submit)
+
+    def on_peak_submit(self, event):
+        # Handler for peak selection submit button
+        print(f"Peak number {self.textboxes[0].text} submitted")
+        try:
+            peak_number = int(self.textboxes[0].text)
+            self.selected_peak_number = peak_number  # Store the peak number
+            self.is_ready = True #set flag that input is gathered
+            print(f"Peak number {peak_number} selected and stored.")
+        except ValueError:
+            print("Please enter a valid integer for the peak number.")
+
+
+    def wait_for_input(self): # temp method to wait for button press
+        while not self.is_ready:
+            plt.waitforbuttonpress(timeout=0.1)
