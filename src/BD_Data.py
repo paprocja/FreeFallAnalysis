@@ -1,20 +1,20 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
+from binary_utils import stitch_files, load_penetrometer_data
 
 class BD_Data:
-    def __init__(self, file_path, bdid=8):
+    def __init__(self, file_paths, bdid=8):
         self.number_peaks = 0
         self.peaks = []
         self.heights = []
-        self.set_data_from_file(file_path)
+        self.set_data_from_file(file_paths)
         self.set_accelerometer_data_from_bdid(bdid)
         self.findpeaks()
         pass
 
-    def set_data_from_file(self, file_path):
+    def set_data_from_file(self, file_paths):
         """
-        Retrieves data from a raw binary, errors on other file types        
+        Retrieves data from a raw binary 
         Parameters
         ---
         file_path: str
@@ -24,33 +24,20 @@ class BD_Data:
         ---
         self.data: 32 bit integer data
         """
-        if file_path:
-            if '.csv' in file_path:
-                raise Exception('Not yet implemented')
-            elif '.bin' in file_path:
-            # read data from .bin
-                with open(file_path, 'rb') as f:
-                    data = np.fromfile(f, dtype=np.uint8)  # Read data as unsigned 8-bit integers (bytes)
-                
-                    # Reshape the data to handle 3 bytes per sample
-                    data = data.reshape(-1, 3)
-                
-                    # Convert the 24-bit chunks to signed 32-bit integers
-                    # By shifting and combining the 3 bytes to create a 32-bit signed integer
-                    int32_data = (data[:, 0].astype(np.int32) << 16) | (data[:, 1].astype(np.int32) << 8) | data[:, 2].astype(np.int32)
-
-                    # Handle sign extension for negative values (if the 24-bit number is negative)
-                    int32_data[int32_data >= 2**23] -= 2**24
-
-                    # Reshape the data into the desired matrix
-                    array_size = (int)(int32_data.size / 10)
-                    raw_data = int32_data.reshape(array_size, 10)
-
-                    self.data = raw_data
-            else:
-                raise Exception(f"Error: {file_path} is not a .csv or .bin file. Please try again!")
+        # Checks file_paths tuple for multiple files and stitches to 1 accordingly
+        num_files = len(file_paths)
+        if num_files > 1:
+            # if more than 1 file
+            file_path = stitch_files(file_paths)
+        elif num_files == 1:
+            # if only 1 file, convert from single entry tuple to a string by extracting the first value
+            file_path = file_paths[0]
         else:
-            raise Exception(f'Error: please select a file!')
+            # Should be impossible due to the Windows file dialog requiring at least 1 file, but here for good measure
+            raise Exception("Error: Please upload a file!")
+
+        # read data from .bin
+        self.data = load_penetrometer_data(file_path)
 
     def set_accelerometer_data_from_bdid(self, bdid):
         """

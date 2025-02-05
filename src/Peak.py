@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import integrate
 
 # Represents a peak where the penetrometer has hit the ground
@@ -38,15 +37,14 @@ class Peak:
             # Peak is at the beginning of the file
             self.start = 0
             self.end = self.peak_center + 500
-        elif self.peak_center > 119500:
-            # Peak is in the middle of file
+        elif self.peak_center > BD.data.shape[0]-500: # previously > 119500
+            # Peak is close to the end of file
             self.start = self.peak_center - 1500
             self.end = BD.data.size
         else:
-            # Peak is close to the end of file
+            # Peak is in the middle of file
             self.start = self.peak_center - 1500
             self.end = self.peak_center + 500
-
         # performs all calculations available at time of creation
         self._copy_from_BD_data(BD)    
         self._set_peak(BD)
@@ -61,13 +59,17 @@ class Peak:
         self.area = None
 
     def _copy_from_BD_data(self, BD):
-        # copies data from the BD_data object
+        """
+        copies data from the BD_data object
+        """
         self.data = BD.data[self.start:self.end+1].copy()
         self.g250g = BD.g250g[self.start:self.end+1].copy()
         self.g200g = BD.g200g[self.start:self.end+1].copy()
         self.g50g = BD.g50g[self.start:self.end+1].copy()
         self.g18g = BD.g18g[self.start:self.end+1].copy()
         self.g2g = BD.g2g[self.start:self.end+1].copy()
+        self.gX55g = BD.gX55g[self.start:self.end+1].copy()
+        self.gY55g = BD.gY55g[self.start:self.end+1].copy()
         # Grabs the x,y values of the peak. 
         # Offsets the x value to be in terms of the peak.
         self.peak_height = BD.g250g[self.peak_center]
@@ -117,6 +119,7 @@ class Peak:
         # Stores the peak as an array offset for integration
         if offset is None:
             offset = self._get_meter_offset(meter_to_analyze) 
+
         self.peak = spliced_meter - offset
         
     def _get_meter_offset(self, meter):
@@ -233,7 +236,7 @@ class Peak:
         if correction_type == 1:
             # Logarithmic
             fsr = np.array([1 + correction_factor * math.log10(v) for v in corrected_velocity])
-        elif correction_factor == 2:
+        elif correction_type == 2:
             # Asinh
             k_prime = correction_factor / math.log(10)
             fsr = np.array([1 + k_prime * math.asinh(v) for v in corrected_velocity])
@@ -473,7 +476,39 @@ class Peak:
 
         fig_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
 
+    
+    #Have each field represent a portion of display to allow this to be re-used for each graph
+    def display_selected_peak(self, val, fig_manager):
+        """
+        Displays the peak using the figure manager.
+        """
+        print(val)
+        def plot(ax):
+            print(val)
+            ax.plot(self.peak, label='peak')
+            ax.plot(self.g2g, label ='2g')
+            ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
+            ax.legend(loc='upper right')
+            ax.set_title(f"Peak at {self.peak_center}")
+            ax.set_xlabel("Sample")
+            ax.set_ylabel("Value")
+            plt.plot(val, self.peak[val], 'rx')
         
+        fig_manager.display(plot)
+
+    def display_selected_range(self, valStart, valEnd, fig_manager, correction_type, correction_factor, tip_type = 'c'):
+
+        qsbc_for_k = self._calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
+        
+        def plot(ax):
+            ax.plot(qsbc_for_k, label='QSBC')
+            ax.set_xlabel('Bearing Capacity')
+            ax.set_ylabel('Depth')
+            ax.set_title('Depth x Bearing Capacity')
+            ax.legend(loc='upper right')
+            plt.plot(valStart, qsbc_for_k[valStart], 'rx')
+            plt.plot(valEnd, qsbc_for_k[valEnd], 'rx')
+        fig_manager.display(plot)
 
     def is_valid_spike(self, spike):
         return True
