@@ -483,9 +483,7 @@ class Peak:
         """
         Displays the peak using the figure manager.
         """
-        print(val)
         def plot(ax):
-            print(val)
             ax.plot(self.peak, label='peak')
             ax.plot(self.g2g, label ='2g')
             ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
