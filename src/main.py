@@ -221,7 +221,7 @@ def get_range_vals(peak: Peak, correction_type, correction_factor):
             return False
 
     
-    end = prompt_user_for_val(f"End time stamp?\n", "Valid ending point", is_valid_end)
+    end = prompt_user_for_val(f"End time stamp?\n", "Valid ending point\n", is_valid_end)
 
     user_happy = confirm_input_range(peak, start, end, correction_type, correction_factor, fig_manager)
 
@@ -229,7 +229,7 @@ def get_range_vals(peak: Peak, correction_type, correction_factor):
         peak.display_QSBC_for_K(fig_manager, correction_type, correction_factor)
 
         start = prompt_user_for_val(f"Start time stamp?\n", "Valid starting point\n", is_valid_start)
-        end = prompt_user_for_val(f"End time stamp?\n", "Valid ending point", is_valid_end)
+        end = prompt_user_for_val(f"End time stamp?\n", "Valid ending point\n", is_valid_end)
 
 
 
@@ -280,15 +280,9 @@ def main():
         # Get input for type of correction log, asinh, or beta
         # Once spike is selected, prompt user to select a QSBC correction equation
         correction_type = get_correction_type()
-        print(f'Correction type: {correction_type}')
-
-        # Get correction value either k or beta value
-        # correction_factor = get_correction_factor(correction_type)
-        # print(f'Correction factor: {correction_factor}')
 
         # Will also need to pass in the tip type when not using default to c
         peak.display_QSBC_for_K(fig_manager, correction_type, 1.5)
-        input("Press enter to continue.")  
         
         # Tuple used to find start and end values. Could be changed so parameters are not needed for average calculation
         start, end = get_range_vals(peak, correction_type, 1.5)
@@ -300,8 +294,6 @@ def main():
         tilt_x, tilt_y = calculate_tilt(spike, peak.end_of_drop, peak.gX55g, peak.gY55g)
 
         print(f'Tilt x: {tilt_x}, Tilt y: {tilt_y}')
-
-        input("Press enter to end the program.")  
 
         # Prompt user to restart
         running = restart()
