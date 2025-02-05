@@ -475,7 +475,39 @@ class Peak:
 
         fig_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
 
+    
+    #Have each field represent a portion of display to allow this to be re-used for each graph
+    def display_selected_peak(self, val, fig_manager):
+        """
+        Displays the peak using the figure manager.
+        """
+        print(val)
+        def plot(ax):
+            print(val)
+            ax.plot(self.peak, label='peak')
+            ax.plot(self.g2g, label ='2g')
+            ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
+            ax.legend(loc='upper right')
+            ax.set_title(f"Peak at {self.peak_center}")
+            ax.set_xlabel("Sample")
+            ax.set_ylabel("Value")
+            plt.plot(val, self.peak[val], 'rx')
         
+        fig_manager.display(plot)
+
+    def display_selected_range(self, valStart, valEnd, fig_manager, correction_type, correction_factor, tip_type = 'c'):
+
+        qsbc_for_k = self._calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
+        
+        def plot(ax):
+            ax.plot(qsbc_for_k, label='QSBC')
+            ax.set_xlabel('Bearing Capacity')
+            ax.set_ylabel('Depth')
+            ax.set_title('Depth x Bearing Capacity')
+            ax.legend(loc='upper right')
+            plt.plot(valStart, qsbc_for_k[valStart], 'rx')
+            plt.plot(valEnd, qsbc_for_k[valEnd], 'rx')
+        fig_manager.display(plot)
 
     def is_valid_spike(self, spike):
         return True
