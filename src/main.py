@@ -8,6 +8,7 @@ from TiltCalculator import calculate_tilt
 
 # BD_Data object with parsed data from binary file
 bd_data = None
+orig = None
 # FigureManager Object to handle all of our plot figures
 fig_manager = FigureManager()
 
@@ -17,7 +18,11 @@ def on_select_file(file_paths, bdid):
     Creates a BD_Data object from the selected file    
     """
     global bd_data
-    bd_data = BD_Data(file_paths, bdid)
+    global orig
+    if orig is None:
+        bd_data = BD_Data(file_paths, bdid)
+        orig = [file_paths, bdid]
+    
 
 def save_to_csv():
     """
@@ -30,7 +35,7 @@ def save_to_csv():
     else:
         bd_data.save_data("output/F_Matrix.csv")
 
-def prompt_user_for_num(input_msg, output_msg, is_valid, data_type='i'):
+def prompt_user_for_val(input_msg, output_msg, is_valid, data_type='i'):
     """
     Prompts the user for an integer or float.
     Will continue to ask user for input until a valid input is provided.
@@ -52,8 +57,10 @@ def prompt_user_for_num(input_msg, output_msg, is_valid, data_type='i'):
         selection = input(input_msg)
         try:
             # get the value the user entered for the specific data type
-            if data_type != 'i':
+            if data_type == 'f':
                 selection = float(selection)
+            elif data_type == 's':
+                selection = str(selection)
             else:
                 selection = int(selection)
 
@@ -66,8 +73,38 @@ def prompt_user_for_num(input_msg, output_msg, is_valid, data_type='i'):
             else:
                 print(f'{selection} is not a valid choice!')
         except Exception as _:
-            type = 'integer' if data_type == 'i' else 'float' 
+            match data_type:
+                case 'f': type = 'float'
+                case 's': type = 'string' 
+                case _: type = 'integer'
             print(f'{selection} is not a valid {type}!')
+
+def restart() -> bool:
+    """
+    Prompts user for yes/no response on restarting the program. 
+    If yes, will create a new figure window and keep the old one in the background.
+    """
+    prompt_msg = "\nWould you like to analyze a peak from the same file? (Y/N)\n"
+    happy_msg = "Valid response selected."
+    response = prompt_user_for_val(prompt_msg, happy_msg, lambda res: res in ['n', 'N', 'y', 'Y'], data_type='s')
+    if response in ['n', 'N']:
+        print("Exiting program.")
+        return False
+    else:
+        print("Loading original data...")
+        global orig
+        if not orig is None:
+            global bd_data
+            bd_data = BD_Data(orig[0], orig[1])
+            print("Loaded original data successfully!")
+            print("Creating figure manager for new window...")
+            global fig_manager
+            fig_manager = FigureManager()
+            print("Created new figure manager successfully!\n")
+            return True
+        else:
+            print("Failed to load original data! Please restart the program and reselect the file.\n")
+            return False
 
 def select_peak() -> Peak:
     """
@@ -81,20 +118,20 @@ def select_peak() -> Peak:
     options = [i+1 for i in range(bd_data.number_peaks)]
     prompt_msg = f"Select a peak {options}:\n"
     happy_msg = "Valid peak selected.\n"
-    peak_number = prompt_user_for_num(prompt_msg, happy_msg, bd_data.is_valid_peak)
+    peak_number = prompt_user_for_val(prompt_msg, happy_msg, bd_data.is_valid_peak)
     selected_peak = Peak(peak_num=peak_number-1, BD=bd_data)
     return selected_peak
 
 def select_spike(peak: Peak, fig_manager: FigureManager) -> int:
     prompt_msg = f"Select a spike within the peak:\n"
     happy = "Valid spike selected.\n"
-    val = prompt_user_for_num(prompt_msg, happy, peak.is_valid_spike)
+    val = prompt_user_for_val(prompt_msg, happy, peak.is_valid_spike)
 
     user_happy = confirm_input_spike(peak, val, fig_manager)
 
     while (user_happy is False):
         peak.display_peak(fig_manager)
-        val = prompt_user_for_num(prompt_msg, happy, peak.is_valid_spike)
+        val = prompt_user_for_val(prompt_msg, happy, peak.is_valid_spike)
         user_happy = confirm_input_spike(peak, val, fig_manager)
 
     return val
@@ -107,7 +144,7 @@ def confirm_input_spike(peak: Peak, val, fig_manager) -> bool:
     peak.display_selected_peak(val, fig_manager)
     prompt_msg = f"Would you like to confirm this input? (1 for yes, 0 for no)\n"
     happy = ""
-    return_val = prompt_user_for_num(prompt_msg, happy, is_valid_confirmation)
+    return_val = prompt_user_for_val(prompt_msg, happy, is_valid_confirmation)
     if (return_val == 0):
         return False
     return True
@@ -131,7 +168,7 @@ def get_correction_type() -> int:
     prompt_msg = "Select a correction type. Enter 1 for Logarithmic, 2 for Asinh, or 3 for Beta.\n"
     happy_msg = "Valid correction type entered.\n"
     # prompt the user for the correction type
-    correction_type = prompt_user_for_num(prompt_msg, happy_msg, is_valid_correction_type)
+    correction_type = prompt_user_for_val(prompt_msg, happy_msg, is_valid_correction_type)
     return correction_type
 
 def get_correction_factor(correction_type: int) -> float:
@@ -158,12 +195,12 @@ def get_correction_factor(correction_type: int) -> float:
         prompt_msg = "Enter in a beta value between 0.035 and 0.085.\n"
         happy_msg = "Valid beta value.\n"
         # prompt user for beta value
-        correction_factor = prompt_user_for_num(prompt_msg, happy_msg, is_valid_beta, 'f')
+        correction_factor = prompt_user_for_val(prompt_msg, happy_msg, is_valid_beta, 'f')
     else:
         # Start a UI thread to get k value
         prompt_msg = "Enter in a k value between 0 and 1.5.\n"
         happy_msg = "Valid k value.\n"
-        correction_factor = prompt_user_for_num(prompt_msg, happy_msg, is_valid_k, 'f')
+        correction_factor = prompt_user_for_val(prompt_msg, happy_msg, is_valid_k, 'f')
 
     return correction_factor
 
@@ -175,23 +212,24 @@ def get_range_vals(peak: Peak, correction_type, correction_factor):
         else:
             return False
         
-    start = prompt_user_for_num(f"Start time stamp?\n", "Valid starting point\n", is_valid_start)
+    start = prompt_user_for_val(f"Start time stamp?\n", "Valid starting point\n", is_valid_start)
         
     def is_valid_end(end, start=start):
         if end > start and end <= 86:
             return True
         else:
             return False
-            
-    end = prompt_user_for_num(f"End time stamp?\n", "Valid ending point", is_valid_end)
+
+    
+    end = prompt_user_for_val(f"End time stamp?\n", "Valid ending point\n", is_valid_end)
 
     user_happy = confirm_input_range(peak, start, end, correction_type, correction_factor, fig_manager)
 
     while (user_happy is False):
         peak.display_QSBC_for_K(fig_manager, correction_type, correction_factor)
 
-        start = prompt_user_for_num(f"Start time stamp?\n", "Valid starting point\n", is_valid_start)
-        end = prompt_user_for_num(f"End time stamp?\n", "Valid ending point", is_valid_end)
+        start = prompt_user_for_val(f"Start time stamp?\n", "Valid starting point\n", is_valid_start)
+        end = prompt_user_for_val(f"End time stamp?\n", "Valid ending point\n", is_valid_end)
 
 
 
@@ -209,7 +247,7 @@ def confirm_input_range(peak: Peak, valStart, valEnd, correction_type, correctio
 
     prompt_msg = f"Would you like to confirm this range? (1 for yes, 0 for no)\n"
     happy = ""
-    return_val = prompt_user_for_num(prompt_msg, happy, is_valid_confirmation)
+    return_val = prompt_user_for_val(prompt_msg, happy, is_valid_confirmation)
     if (return_val == 0):
         return False
     return True
@@ -226,43 +264,39 @@ def main():
         print("No peaks found. Exiting Program.")
         return
     
-    #display the initial plot through the figure manager
-    bd_data.display_initial_data(fig_manager)
+    running = True
+    while running:
+        #display the initial plot through the figure manager
+        bd_data.display_initial_data(fig_manager)
 
-    # Prompt user to select a peak
-    peak = select_peak()
-    peak.display_peak(fig_manager)
+        # Prompt user to select a peak
+        peak = select_peak()
+        peak.display_peak(fig_manager)
 
-    # Once peak is selected, prompt user to select a spike within the peak
-    spike = select_spike(peak, fig_manager)
-    peak.display_decel_vel_dep(fig_manager, spike)
+        # Once peak is selected, prompt user to select a spike within the peak
+        spike = select_spike(peak, fig_manager)
+        peak.display_decel_vel_dep(fig_manager, spike)
 
-    # Get input for type of correction log, asinh, or beta
-    # Once spike is selected, prompt user to select a QSBC correction equation
-    correction_type = get_correction_type()
-    print(f'Correction type: {correction_type}')
+        # Get input for type of correction log, asinh, or beta
+        # Once spike is selected, prompt user to select a QSBC correction equation
+        correction_type = get_correction_type()
 
-    # Get correction value either k or beta value
-    # correction_factor = get_correction_factor(correction_type)
-    # print(f'Correction factor: {correction_factor}')
+        # Will also need to pass in the tip type when not using default to c
+        peak.display_QSBC_for_K(fig_manager, correction_type, 1.5)
+        
+        # Tuple used to find start and end values. Could be changed so parameters are not needed for average calculation
+        start, end = get_range_vals(peak, correction_type, 1.5)
 
-    # Will also need to pass in the tip type when not using default to c
-    peak.display_QSBC_for_K(fig_manager, correction_type, 1.5)
-    input("Press enter to continue.")  
-    
-    # Tuple used to find start and end values. Could be changed so parameters are not needed for average calculation
-    start, end = get_range_vals(peak, correction_type, 1.5)
+        # Currently hard coded to use values 1 and 1.5, but whatever values are needed for graph can be used
+        peak.display_correction_QSBC(fig_manager, correction_type, start, end)
+        # peak._calculate_average_qsbc(correction_type, 1, 1.5, start, end)
 
-    # Currently hard coded to use values 1 and 1.5, but whatever values are needed for graph can be used
-    peak.display_correction_QSBC(fig_manager, correction_type, start, end)
-    # peak._calculate_average_qsbc(correction_type, 1, 1.5, start, end)
+        tilt_x, tilt_y = calculate_tilt(spike, peak.end_of_drop, peak.gX55g, peak.gY55g)
 
-    tilt_x, tilt_y = calculate_tilt(spike, peak.end_of_drop, peak.gX55g, peak.gY55g)
+        print(f'Tilt x: {tilt_x}, Tilt y: {tilt_y}')
 
-    print(f'Tilt x: {tilt_x}, Tilt y: {tilt_y}')
-
-    input("Press enter to end the program.")  
-
+        # Prompt user to restart
+        running = restart()
 
 if __name__ == "__main__":
     main()
