@@ -2,12 +2,13 @@
 import os
 import UI.FileSelectUI as FileSelectUI
 import Utils.io_utils as io
-from UI.Figures.PeakDisplay import display_peak, display_decel_vel_dep, display_QSBC_for_K, display_corrected_QSBC
+from UI.Figures.PeakDisplay import *
 from UI.Figures.PenetrometerDataDisplay import display_initial_data
-from Data.PenetrometerData import PenetrometerData
-from Data.Peak import Peak
 from Data.TiltCalculator import calculate_tilt
 from UI.FigureManager import FigureManager
+from Data.PenetrometerData import PenetrometerData
+from Data.Peak import Peak
+
 #from Utils.io_utils import prompt_user_for_val, confirm_input_range, confirm_input_spike
 
 # penetrometer_data object with parsed data from binary file
