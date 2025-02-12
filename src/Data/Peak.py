@@ -7,7 +7,7 @@ from scipy import integrate
 class Peak:
     #peak_center is the x cordinate of the center of the peak
     #BD is a bd_data object that the peak is within
-    def __init__(self, peak_num, BD):
+    def __init__(self, peak_num, penetrometer_data):
         """
         Constructor for Peak object
 
@@ -15,40 +15,40 @@ class Peak:
         ----------
         peak_center: int
             x value of the highest point of the peak
-        BD: BD_Data
-            BD data object from which the peak comes from
+        penetrometer_data: PenetrometerData
+            data object from which the peak comes from
 
         Assigns
         -------
         self.peak_center: int
             y-value or max height of peak
         self.start: int
-            x-value for start of peak within BD_data object
+            x-value for start of peak within penetrometer_data object
         self.end: int
-            x-value for end of peak within BD_data object
+            x-value for end of peak within penetrometer_data object
 
         self.data, self.g250g, self.g200g, self.g50g, self.g18g, self.g2g:
-            Cut copies of accelerometer/raw data of peak from BD_Data
+            Cut copies of accelerometer/raw data of peak from penetrometer_data
         """
         # grabs max height of peak
-        self.peak_center = BD.peaks[peak_num]
+        self.peak_center = penetrometer_data.peaks[peak_num]
         
         # determines bounds of peak to copy data from
         if self.peak_center <= 1500:
             # Peak is at the beginning of the file
             self.start = 0
             self.end = self.peak_center + 500
-        elif self.peak_center > BD.data.shape[0]-500: # previously > 119500
+        elif self.peak_center > penetrometer_data.data.shape[0]-500: # previously > 119500
             # Peak is close to the end of file
             self.start = self.peak_center - 1500
-            self.end = BD.data.size
+            self.end = penetrometer_data.data.size
         else:
             # Peak is in the middle of file
             self.start = self.peak_center - 1500
             self.end = self.peak_center + 500
         # performs all calculations available at time of creation
-        self._copy_from_BD_data(BD)    
-        self._set_peak(BD)
+        self._copy_from_penetrometer_data(penetrometer_data)    
+        self._set_peak(penetrometer_data)
         self._find_end_of_drop()
 
         # defines values to be used later for potential storage / saving objects
@@ -58,32 +58,97 @@ class Peak:
         self.depth = None
         self.selected_spike = None
         self.area = None
+        self.initial_qsbc_for_K = None
 
-    def _copy_from_BD_data(self, BD):
+    def calculate_QSBC_for_K(self, correction_type, correction_factor, tip_type):
+            """
+            Calculates standardized quasi static bearing capacity based on type, factor, and tip.
+
+            Parameters
+            ----------
+            correction_type: int
+                the type of correction either Log, Asinh, Beta
+            correction_factor: float
+                either the k or beta value to be used in calculation
+            tip_type: char
+                the type of tip the penetrometer has
+
+            Return
+            ------
+            numpy array
+                the corrected qsbc for a given correction type, factor, and tip
+            """
+            mass, _ = self._get_mass_length(tip_type)
+
+            # Take off the last value because it is 0 and we cannot take log of 0
+            corrected_velocity = self.velocity[:-1] / 0.02
+
+            # Calculate fsr
+            if correction_type == 1:
+                # Logarithmic
+                fsr = np.array([1 + correction_factor * math.log10(v) for v in corrected_velocity])
+            elif correction_type == 2:
+                # Asinh
+                k_prime = correction_factor / math.log(10)
+                fsr = np.array([1 + k_prime * math.asinh(v) for v in corrected_velocity])
+            else:
+                # Beta
+                fsr = np.array([v ** correction_factor for v in corrected_velocity])
+
+            force_bouyancy = self.decelleration * mass * 9.81
+
+            # the first value in the area array is 0
+            q_dynamic = force_bouyancy[1:] / self.area[1:]
+            self.qdyn = q_dynamic
+            # because we adjusted q_dynamic and velocity we need to correct here to allign the values
+            qsbc =  q_dynamic[:-1] / fsr[1:]
+
+            qsbc_kPa = qsbc / 1000
+
+            return qsbc_kPa
+        
+    def integrate_spike(self, spike):
         """
-        copies data from the BD_data object
+        Gets velocity and depth for a spike and calculates the area of the penetrometer
         """
-        self.data = BD.data[self.start:self.end+1].copy()
-        self.g250g = BD.g250g[self.start:self.end+1].copy()
-        self.g200g = BD.g200g[self.start:self.end+1].copy()
-        self.g50g = BD.g50g[self.start:self.end+1].copy()
-        self.g18g = BD.g18g[self.start:self.end+1].copy()
-        self.g2g = BD.g2g[self.start:self.end+1].copy()
-        self.gX55g = BD.gX55g[self.start:self.end+1].copy()
-        self.gY55g = BD.gY55g[self.start:self.end+1].copy()
+        self._integrate_acceleration(spike)
+        self._calculate_area_of_meter()
+
+    # TODO get the start and end k values to pass into calculate average from the user
+    def calculate_corrected_qsbc(self, correction_type, peak_start, peak_end):
+        """
+        Calculates the corrected qsbc based on defined factors
+        """
+        line1val1, line1val2, line1ave = self._calculate_average_qsbc(correction_type, 1.0, 1.5, peak_start, peak_end)
+        line2val1, line2val2, line2ave = self._calculate_average_qsbc(correction_type, 0.2, 0.4, peak_start, peak_end)
+
+        return line1val1, line1val2, line1ave, line2val1, line2val2, line2ave
+
+    def _copy_from_penetrometer_data(self, penetrometer_data):
+        """
+        copies data from the penetrometer_data object
+        """
+        self.data = penetrometer_data.data[self.start:self.end+1].copy()
+        self.g250g = penetrometer_data.g250g[self.start:self.end+1].copy()
+        self.g200g = penetrometer_data.g200g[self.start:self.end+1].copy()
+        self.g50g = penetrometer_data.g50g[self.start:self.end+1].copy()
+        self.g18g = penetrometer_data.g18g[self.start:self.end+1].copy()
+        self.g2g = penetrometer_data.g2g[self.start:self.end+1].copy()
+        self.gX55g = penetrometer_data.gX55g[self.start:self.end+1].copy()
+        self.gY55g = penetrometer_data.gY55g[self.start:self.end+1].copy()
         # Grabs the x,y values of the peak. 
         # Offsets the x value to be in terms of the peak.
-        self.peak_height = BD.g250g[self.peak_center]
+        self.peak_height = penetrometer_data.g250g[self.peak_center]
         self.peak_center = self.peak_center - self.start
 
-    def _set_peak(self, BD):
+    def _set_peak(self, penetrometer_data):
         """
         Sets the peak that can be displayed and integrated.
         A column (meter) from the matrix based off the magnitude of the peak, centers the column around 0
 
         Parameters
         ----------
-        BD: BD_Data
+        penetrometer_data: PenetrometerData
             The data the peak comes from
         
         Assigns
@@ -102,20 +167,20 @@ class Peak:
         offset = None
         if (max_250 > 200):
             spliced_meter = self.g250g.copy()
-            meter_to_analyze = BD.g250g.copy()
+            meter_to_analyze = penetrometer_data.g250g.copy()
         elif (max_200 > 50):
             spliced_meter = self.g200g.copy()
-            meter_to_analyze = BD.g200g.copy()
+            meter_to_analyze = penetrometer_data.g200g.copy()
         elif (max_200 > 18):
             spliced_meter = self.g50g.copy()
-            meter_to_analyze = BD.g50g.copy()
+            meter_to_analyze = penetrometer_data.g50g.copy()
             offset = np.mean(meter_to_analyze[self.end + 100:self.end + 201])
         elif (max_200 > 1.7):
             spliced_meter = self.g18g.copy()
-            meter_to_analyze = BD.g18g.copy()
+            meter_to_analyze = penetrometer_data.g18g.copy()
         else:
             spliced_meter = self.g2g.copy()
-            meter_to_analyze = BD.g2g.copy()
+            meter_to_analyze = penetrometer_data.g2g.copy()
 
         # Stores the peak as an array offset for integration
         if offset is None:
@@ -170,7 +235,6 @@ class Peak:
 
     def _find_end_of_drop(self):
         """
-        TODO 
         Need see if this code can be cleaned up. Right now this is just the
         same functinoality that the matlab script had for `findent2`. 
         Not sure if its accounting for some edge case but seems extra, looks like
@@ -209,53 +273,6 @@ class Peak:
 
         # integrates velocity over time for depth
         self.depth = integrate.cumulative_trapezoid(self.velocity, dx=.0005, initial=0)
-
-    def _calculate_QSBC_for_K(self, correction_type, correction_factor, tip_type):
-        """
-        Calculates standardized quasi static bearing capacity based on type, factor, and tip.
-
-        Parameters
-        ----------
-        correction_type: int
-            the type of correction either Log, Asinh, Beta
-        correction_factor: float
-            either the k or beta value to be used in calculation
-        tip_type: char
-            the type of tip the penetrometer has
-
-        Return
-        ------
-        numpy array
-            the corrected qsbc for a given correction type, factor, and tip
-        """
-        mass, _ = self._get_mass_length(tip_type)
-
-        # Take off the last value because it is 0 and we cannot take log of 0
-        corrected_velocity = self.velocity[:-1] / 0.02
-
-        # Calculate fsr
-        if correction_type == 1:
-            # Logarithmic
-            fsr = np.array([1 + correction_factor * math.log10(v) for v in corrected_velocity])
-        elif correction_type == 2:
-            # Asinh
-            k_prime = correction_factor / math.log(10)
-            fsr = np.array([1 + k_prime * math.asinh(v) for v in corrected_velocity])
-        else:
-            # Beta
-            fsr = np.array([v ** correction_factor for v in corrected_velocity])
-
-        force_bouyancy = self.decelleration * mass * 9.81
-
-        # the first value in the area array is 0
-        q_dynamic = force_bouyancy[1:] / self.area[1:]
-        self.qdyn = q_dynamic
-        # because we adjusted q_dynamic and velocity we need to correct here to allign the values
-        corrected_QSBC =  q_dynamic[:-1] / fsr[1:]
-
-        corrected_QSBC_kPa = corrected_QSBC / 1000
-
-        return corrected_QSBC_kPa
     
     def _calculate_average_qsbc(self, correction_type, start_k, end_k, start_range, end_range, tip_type = 'c'):
         """
@@ -282,9 +299,9 @@ class Peak:
             the average qsbc between the two given strain-rate factors
         """
         # Calculates lower bound array
-        val1 = self._calculate_QSBC_for_K(correction_type, start_k, tip_type)
+        val1 = self.calculate_QSBC_for_K(correction_type, start_k, tip_type)
         # Calculates higher bound array
-        val2 = self._calculate_QSBC_for_K(correction_type, end_k, tip_type)
+        val2 = self.calculate_QSBC_for_K(correction_type, end_k, tip_type)
 
         # Cuts off unneeded values
         val1r = val1[start_range - 2:end_range - 1]
@@ -294,53 +311,6 @@ class Peak:
         ave = (val1r + val2r) / 2
         
         return val1r, val2r, ave
-
-
-        
-    def display_peak(self, fig_manager):
-        """
-        Displays the peak using the figure manager.
-        """
-        def plot(ax):
-            ax.plot(self.peak, label='peak')
-            ax.plot(self.g2g, label ='2g')
-            ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
-            ax.legend(loc='upper right')
-            ax.set_title(f"Peak at {self.peak_center}")
-            ax.set_xlabel("Sample")
-            ax.set_ylabel("Value")
-        
-        fig_manager.display(plot)
-
-    def display_decel_vel_dep(self, fig_manager, selected_spike=None):
-        """
-        Displays the deceleration, velocity, and depth data in one plot.
-
-        Parameters
-        ----------
-        fig_manager: FigureManager
-            The figure manager used to display the plot
-        selected_spike: int
-            The x value of the spike where we will start to calculate values from if not provided will use the already assigned velocity and depth
-
-        """
-
-        # TODO make sure if selected_spike is None velocity and depth exist
-        if selected_spike is not None:
-                self._integrate_acceleration(selected_spike)
-                self._calculate_area_of_meter()
-        
-        def plot(ax):
-            ax.invert_yaxis()
-            ax.set_ylim(max(self.depth), 0)
-            ax.set_xlim(0, max(max(self.decelleration), max(self.velocity)))
-            ax.plot(self.decelleration, self.depth, linestyle='-', label='Deceleration')
-            ax.plot(self.velocity, self.depth, linestyle='--', label='Velocity')
-            ax.set_ylabel('Depth [Meters]')
-            ax.set_xlabel('Deceleration [g] // Velocity [m/s]')
-            ax.legend(loc='upper right')
-
-        fig_manager.display(plot)
         
     def _calculate_area_of_meter(self, tip_type='c', a_type='p'):
         """
@@ -408,106 +378,3 @@ class Peak:
             A1[k] = A1[k] / 10000  # Convert area to square meters
         
         self.area = A1
-    
-    def display_QSBC_for_K(self, fig_manager, correction_type, correction_factor, tip_type = 'c'):
-        """
-        Calculates and displays the quasi static bearing capacity for a given type, factor, and tip.
-
-        Parameters
-        ----------
-        correction_type: int
-            the type of correction either Log, Asinh, Beta
-        correction_factor: float
-            either the k or beta value to be used in calculation
-        tip_type: char
-            the type of tip the penetrometer has
-        """
-        qsbc_for_k = self._calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
-
-        def plot(ax):
-            ax.plot(qsbc_for_k, label='QSBC')
-            ax.set_xlabel('Bearing Capacity')
-            ax.set_ylabel('Depth')
-            ax.set_title('Depth x Bearing Capacity')
-            ax.legend(loc='upper right')
-
-        fig_manager.display(plot)
-
-
-    def display_correction_QSBC(self, fig_manager, correction_type, start, end):
-
-        line1val1, line1val2, line1ave = self._calculate_average_qsbc(correction_type, 1.0, 1.5, start, end)
-        line2val1, line2val2, line2ave = self._calculate_average_qsbc(correction_type, 0.2, 0.4, start, end)
-        depth = self.depth[start:end+1]*100
-        def plot(ax):
-
-            #plot the decel and velocity to the left side of figure
-            ax[0].invert_yaxis()
-            ax[0].set_ylim(max(self.depth), 0)
-            ax[0].set_xlim(0, max(max(self.decelleration), max(self.velocity)))
-            ax[0].plot(self.decelleration, self.depth, linestyle='-', label='Deceleration')
-            ax[0].plot(self.velocity, self.depth, linestyle='--', label='Velocity')
-            ax[0].set_ylabel('Depth [Meters]')
-            ax[0].set_xlabel('Deceleration [g] // Velocity [m/s]')
-            ax[0].legend(loc='upper right')
-            
-
-            #Plot the Correction averages and the dynamic on the right side of figure
-            ax[1].invert_yaxis()
-            ax[1].set_ylim(max(depth), 0)
-            ax[1].set_xlim(0, max(max(line1ave), max(line2ave), max(self.qdyn[start:end+1])/1000))
-            
-            #first correciton average line
-            ax[1].plot(line1ave, depth, label='QSBC(av) k = 1.0 & 1.5')
-            ax[1].fill_betweenx(depth, line1val1, line1val2, color='grey', alpha=0.3)
-
-            #second correction average line
-            ax[1].plot(line2ave, depth, label='QSBC(av) k = 0.2 & 0.4')
-            ax[1].fill_betweenx(depth, line2val1, line2val2, color='grey', alpha=0.3)
-            
-            #plot the dynamic bearing capacity
-            ax[1].plot(self.qdyn[start:end+1]/1000, depth, label='Qdyn')
-            
-            ax[1].set_xlabel('QSBC [kPa]')
-            ax[1].set_ylabel('Depth [CM]')
-            ax[1].set_title('QSBC corrections & Q_dynamic')
-            ax[1].legend(loc='upper right')
-
-
-
-        fig_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
-
-    
-    #Have each field represent a portion of display to allow this to be re-used for each graph
-    def display_selected_peak(self, val, fig_manager):
-        """
-        Displays the peak using the figure manager.
-        """
-        def plot(ax):
-            ax.plot(self.peak, label='peak')
-            ax.plot(self.g2g, label ='2g')
-            ax.scatter(self.end_of_drop, self.peak[self.end_of_drop], marker='x', label='End of drop', color='black')
-            ax.legend(loc='upper right')
-            ax.set_title(f"Peak at {self.peak_center}")
-            ax.set_xlabel("Sample")
-            ax.set_ylabel("Value")
-            plt.plot(val, self.peak[val], 'rx')
-        
-        fig_manager.display(plot)
-
-    def display_selected_range(self, valStart, valEnd, fig_manager, correction_type, correction_factor, tip_type = 'c'):
-
-        qsbc_for_k = self._calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
-        
-        def plot(ax):
-            ax.plot(qsbc_for_k, label='QSBC')
-            ax.set_xlabel('Bearing Capacity')
-            ax.set_ylabel('Depth')
-            ax.set_title('Depth x Bearing Capacity')
-            ax.legend(loc='upper right')
-            plt.plot(valStart, qsbc_for_k[valStart], 'rx')
-            plt.plot(valEnd, qsbc_for_k[valEnd], 'rx')
-        fig_manager.display(plot)
-
-    def is_valid_spike(self, spike):
-        return True
