@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.signal import find_peaks
-from binary_utils import stitch_files, load_penetrometer_data
+from Utils.binary_utils import stitch_files, load_penetrometer_data
 
-class BD_Data:
+class PenetrometerData:
     def __init__(self, file_paths, bdid=8):
         self.number_peaks = 0
         self.peaks = []
@@ -163,30 +163,6 @@ class BD_Data:
             return True
         else:
             return False
-
-
-    def display_initial_data(self, fig_manager):
-        """
-        Displays initial data and peaks using the figure manager.
-        """
-        def plot(ax):
-            ax.plot(self.g2g, linestyle='-', linewidth=.5, label="2g", color='green')
-            ax.plot(self.g18g, linestyle='-', linewidth=.5, label="18g", color='red')
-            ax.plot(self.g50g, linestyle='-', linewidth=.5, label="50g", color='blue')
-            ax.plot(self.g200g, linestyle='-', linewidth=.5, label="200g", color='brown')
-            ax.plot(self.g250g, linestyle='-', linewidth=.5, label="250g", color='purple')
-            ax.scatter(self.peaks, self.heights, marker='*', label='peaks', color='black')
-            for i, txt in enumerate(range(1, self.number_peaks + 1)):
-                ax.annotate(txt, (self.peaks[i], self.heights[i]), xytext=(5, 5), textcoords='offset points',
-                            ha='center', va='bottom', bbox=dict(boxstyle='round,pad=0.5', fc='blue', alpha=0.5),
-                            arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.2"))
-            ax.legend(loc='upper right')
-            ax.set_xlabel('Steps')
-            ax.set_ylabel('Deceleration (g)')
-            ax.set_title('Initial Data Visualization')
-
-        fig_manager.display(plot)
-
 
     def save_data(self, file_path):
         """
