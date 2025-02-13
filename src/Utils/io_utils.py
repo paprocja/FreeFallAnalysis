@@ -1,5 +1,6 @@
 from Data.Peak import Peak
 from UI.Figures.PeakDisplay import display_selected_range, display_selected_peak
+from UI.Figures.PorePressureDisplay import display_peaks_and_ppm
 
 def prompt_user_for_val(input_msg, output_msg, is_valid, data_type='i'):
     """
@@ -45,13 +46,28 @@ def prompt_user_for_val(input_msg, output_msg, is_valid, data_type='i'):
                 case _: type = 'integer'
             print(f'{selection} is not a valid {type}!')
 
-def confirm_input_range(fig_manager, qsbc_for_k, valStart, valEnd) -> bool:
+def confirm_peak_range(fig_manager, qsbc_for_k, valStart, valEnd) -> bool:
     def is_valid_confirmation(val):
         if (val == 1 or val == 0):
             return True
         return False
     
     display_selected_range(fig_manager, qsbc_for_k, valStart, valEnd)
+
+    prompt_msg = f"Would you like to confirm this range? (1 for yes, 0 for no)\n"
+    happy = ""
+    return_val = prompt_user_for_val(prompt_msg, happy, is_valid_confirmation)
+    if (return_val == 0):
+        return False
+    return True
+
+def confirm_pore_pressure_range(fig_manager, penetrometer_data, valStart, valEnd) -> bool:
+    def is_valid_confirmation(val):
+        if (val == 1 or val == 0):
+            return True
+        return False
+    
+    display_peaks_and_ppm(fig_manager, penetrometer_data, valStart, valEnd, True)
 
     prompt_msg = f"Would you like to confirm this range? (1 for yes, 0 for no)\n"
     happy = ""
