@@ -1,3 +1,5 @@
+from Validator import Validator
+
 def display_initial_data(figure_manager, g2g, g18g, g50g, g200g, g250g, peaks, heights, number_peaks):
     """
     Displays initial data and peaks using the figure manager.
@@ -19,3 +21,8 @@ def display_initial_data(figure_manager, g2g, g18g, g50g, g200g, g250g, peaks, h
         ax.set_title('Initial Data Visualization')
 
     figure_manager.display(plot)
+
+    figure_manager.add_text_box("Start Index", [0.4, 0.02, 0.15, 0.05], Validator.is_valid_peak)
+    figure_manager.add_button("Submit", [0.8, 0.02, 0.1, 0.05])
+    peak_number = fig_manager.wait_for_valid_inputs()
+    return peak_number

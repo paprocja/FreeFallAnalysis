@@ -195,11 +195,11 @@ def main():
     running = True
     while running:
         #display the initial plot through the figure manager
-        display_initial_data(fig_manager, penetrometer_data.g2g, penetrometer_data.g18g, penetrometer_data.g50g, penetrometer_data.g200g, penetrometer_data.g250g,
+        peak_number = display_initial_data(fig_manager, penetrometer_data.g2g, penetrometer_data.g18g, penetrometer_data.g50g, penetrometer_data.g200g, penetrometer_data.g250g,
                               penetrometer_data.peaks, penetrometer_data.heights, penetrometer_data.number_peaks)
 
         # Prompt user to select a peak
-        peak = select_peak()
+        peak = Peak(peak_num=peak_number-1, penetrometer_data=penetrometer_data)
 
         display_peak(fig_manager, peak.peak, peak.g2g, peak.end_of_drop, peak.peak_center)
 
