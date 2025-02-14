@@ -1,4 +1,4 @@
-from Validator import Validator
+from ..Validator import Validator
 
 def display_initial_data(figure_manager, g2g, g18g, g50g, g200g, g250g, peaks, heights, number_peaks):
     """
@@ -24,5 +24,5 @@ def display_initial_data(figure_manager, g2g, g18g, g50g, g200g, g250g, peaks, h
 
     figure_manager.add_text_box("Start Index", [0.4, 0.02, 0.15, 0.05], Validator.is_valid_peak)
     figure_manager.add_button("Submit", [0.8, 0.02, 0.1, 0.05])
-    peak_number = fig_manager.wait_for_valid_inputs()
+    peak_number = figure_manager.wait_for_valid_inputs()
     return peak_number

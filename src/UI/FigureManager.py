@@ -9,7 +9,7 @@ class FigureManager:
         self.buttons = []  # Store references to dynamically created buttons
         self.text_boxes = {}
         self.text_values = {} 
-        self.validation_constraints = {} 
+        self.validation_rules = {} 
         self.valid_inputs = {}  
     
     def clear(self):
