@@ -1,15 +1,17 @@
 class Validator:
+    def __init__(self):
+        self.num_peaks = None  # Default value for num_peaks
+        
+    def set_num_peaks(self, num_peaks):
+        """Set the number of peaks dynamically."""
+        self.num_peaks = num_peaks
 
     def is_valid_peak(self, selected_peak):
-        """
-        Returns if a selected peak is within the range of peaks.
-
-        Parameters
-        ----------
-        selected_peak: int
-        The peak input by a user that needs to be validated
-        """
-        if selected_peak - 1 in range(0, self.number_peaks):
+        """Validates that the selected peak is within the valid range."""
+        if self.num_peaks is None:
+            raise ValueError("num_peaks must be set before validation.")
+        
+        if int(selected_peak) - 1 in range(0, self.num_peaks):
             return True
         else:
             return False
