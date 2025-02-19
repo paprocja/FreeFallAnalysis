@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
+import pandas as pd
+from datetime import datetime
 
-def display_peak(figure_manager, peak, g2g, drop_end, peak_center):
+def display_peak(figure_manager, peak, g2g, drop_end, peak_center, save_data, filename="peak_data"):
     """
     Displays the peak using the figure manager.
     """
@@ -13,10 +15,15 @@ def display_peak(figure_manager, peak, g2g, drop_end, peak_center):
         ax.set_xlabel("Sample")
         ax.set_ylabel("Value")
     
+    if save_data:
+        df = pd.DataFrame({"Peak": peak, "G2G": g2g})
+        filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
+        
+
     figure_manager.display(plot)
 
-
-def display_decel_vel_dep(figure_manager, depth, decelleration, velocity):
+def display_decel_vel_dep(figure_manager, depth, decelleration, velocity, save_data, filename="decel_vel_dep"):
     """
     Displays the deceleration, velocity, and depth data in one plot.
     """
@@ -30,9 +37,14 @@ def display_decel_vel_dep(figure_manager, depth, decelleration, velocity):
         ax.set_xlabel('Deceleration [g] // Velocity [m/s]')
         ax.legend(loc='upper right')
 
+    if save_data:
+        df = pd.DataFrame({"Decelleration": decelleration, "Velocity": velocity, "Depth": depth})
+        filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
+
     figure_manager.display(plot)
 
-def display_QSBC_for_K(figure_manager, qsbc_for_k):
+def display_QSBC_for_K(figure_manager, qsbc_for_k, save_data, filename="bearing_capacity"):
     """
     Displays the quasi static bearing capacity
     """
@@ -43,11 +55,16 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k):
         ax.set_title('Depth x Bearing Capacity')
         ax.legend(loc='upper right')
 
+    if save_data:
+        df = pd.DataFrame({"QSBC": qsbc_for_k})
+        filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
+
     figure_manager.display(plot)
 
 
 def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
-                            depth, velocity, decelleration, qdyn, start, end):
+                            depth, velocity, decelleration, qdyn, start, end, save_data, filename="corrected_qsbc"):
     """
     Displays the corrected quasi static bearing capacity
     """
@@ -85,6 +102,11 @@ def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val
         ax[1].set_ylabel('Depth [CM]')
         ax[1].set_title('QSBC corrections & Q_dynamic')
         ax[1].legend(loc='upper right')
+
+    if save_data:
+        df = pd.DataFrame({"First Corrected Line Average": line1ave, "Second Corrected Line Average": line2ave, "Dynamic Bearing Capacity": qdyn[start:end+1] / 1000, "Corrected Depth": corrected_depth})
+        filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
 
     fig_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
 

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 import numpy as np  # numpy needed to support the change from single ax to multiple
+from datetime import datetime
 
 class FigureManager:
     def __init__(self, figsize=(12, 6)):
@@ -49,7 +50,18 @@ class FigureManager:
 
         plot_function(self.ax, *args, **kwargs)
 
+        plt.subplots_adjust(bottom=0.1)
+
+        axbutton = plt.axes([0.4, 0.005, 0.1, 0.05])
+        png_button = Button(axbutton, 'Save as PNG')
+        self.buttons.append(png_button)
+        png_button.on_clicked(self.save_to_png)
+
         self.fig.tight_layout()
         self.fig.canvas.draw_idle()
         plt.show(block=False)
+
+    def save_to_png(self, event):
+        filename = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        plt.savefig('saved_data/' + 'figure_' + filename + '.png')
 

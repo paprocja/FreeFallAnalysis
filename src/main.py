@@ -8,6 +8,7 @@ from Data.TiltCalculator import calculate_tilt
 from UI.FigureManager import FigureManager
 from Data.PenetrometerData import PenetrometerData
 from Data.Peak import Peak
+from datetime import datetime
 
 #from Utils.io_utils import prompt_user_for_val, confirm_input_range, confirm_input_spike
 
@@ -38,10 +39,8 @@ def save_to_csv():
     """
     # Allows main to be executed from ui-ffp or ui-ffp/src folders
     # TODO make it so main can be executed anywhere on the system for packaging
-    if os.path.exists("../output/F_Matrix.csv"):
-        penetrometer_data.save_data("../output/F_Matrix.csv")
-    else:
-        penetrometer_data.save_data("output/F_Matrix.csv")
+    penetrometer_data.save_data('saved_data/' + 'raw_data_' + datetime.now().strftime("%Y-%m-%d_%H%M%S") + '.csv')
+
 
 def restart() -> bool:
     """
@@ -94,7 +93,7 @@ def select_spike(peak: Peak, fig_manager: FigureManager) -> int:
     user_happy = io.confirm_input_spike(fig_manager, peak, val)
 
     while (user_happy is False):
-        display_peak(fig_manager, peak.peak, peak.g2g, peak.end_of_drop, peak.peak_center)
+        display_peak(fig_manager, peak.peak, peak.g2g, peak.end_of_drop, peak.peak_center, False)
         val = io.prompt_user_for_val(prompt_msg, happy, lambda _: True)
         user_happy = io.confirm_input_spike(fig_manager, peak, val)
 
@@ -173,7 +172,7 @@ def get_range_vals(qsbc_for_K):
     user_happy = io.confirm_input_range(fig_manager, qsbc_for_K, start, end)
 
     while (user_happy is False):
-        display_QSBC_for_K(fig_manager, qsbc_for_K)
+        display_QSBC_for_K(fig_manager, qsbc_for_K, False)
 
         start = io.prompt_user_for_val(f"Start time stamp?\n", "Valid starting point\n", is_valid_start)
         end = io.prompt_user_for_val(f"End time stamp?\n", "Valid ending point\n", is_valid_end)
@@ -195,19 +194,20 @@ def main():
     running = True
     while running:
         #display the initial plot through the figure manager
+        save_to_csv()
         display_initial_data(fig_manager, penetrometer_data.g2g, penetrometer_data.g18g, penetrometer_data.g50g, penetrometer_data.g200g, penetrometer_data.g250g,
                               penetrometer_data.peaks, penetrometer_data.heights, penetrometer_data.number_peaks)
 
         # Prompt user to select a peak
         peak = select_peak()
 
-        display_peak(fig_manager, peak.peak, peak.g2g, peak.end_of_drop, peak.peak_center)
+        display_peak(fig_manager, peak.peak, peak.g2g, peak.end_of_drop, peak.peak_center, True)
 
         # Once peak is selected, prompt user to select a spike within the peak
         spike = select_spike(peak, fig_manager)
         peak.integrate_spike(spike)
 
-        display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity)
+        display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity, True)
 
         # Get input for type of correction log, asinh, or beta
         # Once spike is selected, prompt user to select a QSBC correction equation
@@ -220,7 +220,7 @@ def main():
         initial_qsbc = peak.calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
 
         # Will also need to pass in the tip type when not using default to c
-        display_QSBC_for_K(fig_manager, initial_qsbc)
+        display_QSBC_for_K(fig_manager, initial_qsbc, True)
         
         # Tuple used to find start and end values. Could be changed so parameters are not needed for average calculation
         start, end = get_range_vals(initial_qsbc)
@@ -229,7 +229,7 @@ def main():
 
         # Currently hard coded to use values 1 and 1.5, but whatever values are needed for graph can be used
         display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
-                                peak.depth, peak.velocity, peak.decelleration, peak.qdyn, start, end)
+                                peak.depth, peak.velocity, peak.decelleration, peak.qdyn, start, end, True)
 
         tilt_x, tilt_y = calculate_tilt(spike, peak.end_of_drop, peak.gX55g, peak.gY55g)
 
