@@ -13,6 +13,7 @@ class FigureManager:
         self.validation_rules = {}
         self.valid_inputs = {}
         self.validator = Validator()  # Only instantiate once, re-use it
+        self.is_ready = False
 
     def clear(self):
         """Clears the current axes and resets the figure."""
@@ -44,7 +45,9 @@ class FigureManager:
 
         plot_function(self.ax, *args, **kwargs)
 
-        self.fig.tight_layout()
+        plt.subplots_adjust(bottom=0.1)
+
+        self.fig.tight_layout(rect=[0, 0.1,1,1])
         self.fig.canvas.draw_idle()
         plt.show(block=False)
 
@@ -52,8 +55,12 @@ class FigureManager:
         """Adds a button."""
         ax_button = self.fig.add_axes(position)
         button = Button(ax_button, label)
-        button.on_clicked(callback if callback else lambda event: None)
+        button.on_clicked(self.on_submit)
         self.buttons.append(button)
+
+    def on_submit(self, event):
+        if all(self.valid_inputs.values()):
+            self.is_ready = True
 
     def add_text_box(self, label, position, validation_rule):
         """ Adds a text box and sets up validation. """
@@ -77,35 +84,39 @@ class FigureManager:
             self.remove_invalid_text()
         else:
             self.valid_inputs[label] = False
-            print(f"Invalid input for {label}, please try again.")
             self.add_invalid_text()
 
   
     def wait_for_valid_inputs(self):
         """Waits until all text boxes contain valid values."""
-        while not all(self.valid_inputs.values()):  # Check if all are valid
-            plt.pause(0.1)  # Keep UI responsive
+        while not self.is_ready:
+            plt.waitforbuttonpress(timeout=0.1)
         return self.text_values  # Return valid inputs
+
 
     def add_invalid_text(self):
         """ Adds text to the figure to indicate invalid input. """
-        if hasattr(self, 'invalid_text'):  # If invalid text exists, remove it first
-            self.invalid_text.remove()
+        message_height = 0.05  # Height of the message area
+        if hasattr(self, 'message_ax'):
+            self.message_ax.remove()  # Clear previous messages
+    
+        # Create a new axes for the message at the bottom of the figure
+        self.message_ax = self.fig.add_axes([0.38, 0.05, 0.5, message_height], facecolor='lightgrey')
+        self.message_ax.set_xticks([])
+        self.message_ax.set_yticks([])
 
-         # If there is only one Axes object, use it directly
-        if isinstance(self.ax, plt.Axes):  # Single Axes
-            self.invalid_text = self.ax.text(0.5, 0.01, "Invalid input, please try again", 
-                                            transform=self.ax.transAxes, 
-                                            ha='center', va='center', 
-                                            color='red', fontsize=12, fontweight='bold')
-        else:  # Multiple Axes (array)
-            self.invalid_text = self.ax[0].text(0.5, 0.01, "Invalid input, please try again", 
-                                                transform=self.ax[0].transAxes, 
+        # Display the message in the newly created message area
+        self.invalid_text = self.message_ax.text(0.5, 0.5, "Invalid input, please try again", 
                                                 ha='center', va='center', 
                                                 color='red', fontsize=12, fontweight='bold')
+        # self.fig.canvas.draw_idle()
         
     def remove_invalid_text(self):
         """ Removes invalid input text from the figure. """
+        if hasattr(self, 'message_ax'):
+            self.message_ax.remove()
+            del self.message_ax  # Clean up the reference
+
         if hasattr(self, 'invalid_text'):
             self.invalid_text.remove()
-            del self.invalid_text  # Clean up the reference
+            del self.invalid_text
