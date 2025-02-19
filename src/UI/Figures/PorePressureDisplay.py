@@ -1,3 +1,5 @@
+from Data.PorePressure import PorePressure
+
 def display_peaks_and_ppm(figure_manager, penetrometer_data, pressure_start=0, pressure_end=0, display_range=False):
     """
     Displays initial data and peaks using the figure manager.
@@ -33,3 +35,50 @@ def display_peaks_and_ppm(figure_manager, penetrometer_data, pressure_start=0, p
         return ax2
 
     figure_manager.display_share_y(plot)
+
+def display_deceleration_profile(figure_manager, pore_pressure: PorePressure, start=0, end=0, display_range=False):
+    def plot(ax):
+        ax.plot(pore_pressure.deceleration_profile, linestyle='-', linewidth=.5, label="2g", color='blue')
+        ax.set_title('Deceleration Profile')
+
+        if display_range:
+            ax.plot(start, pore_pressure.deceleration_profile[start], 'rx')
+            ax.plot(end, pore_pressure.deceleration_profile[end], 'rx')
+
+    figure_manager.display(plot)
+
+def display_pore_pressure(figure_manager, pore_pressure: PorePressure):
+    def plot(ax):
+        # Deceleration
+        ax.plot(pore_pressure.specific_deceleration, pore_pressure.depth, linestyle='-', linewidth='0.5', label='Dec (m/s2)', color='blue')
+
+        # Velocity
+        ax.plot(pore_pressure.velocity, pore_pressure.depth, linestyle='-', linewidth='0.5', label='Velocity (m/s)', color='red')
+
+        # Hydrostatic pressure
+        ax.plot(pore_pressure.hydrostatic_pressure, pore_pressure.depth, linestyle='-', linewidth='0.5', label='Hydrostatic Pressure', color='black')
+
+        # Point of impact
+        ax.plot([pore_pressure.min_deceleration, pore_pressure.max_measured_pressure], [pore_pressure.point_of_impact, pore_pressure.point_of_impact],
+                linestyle='--', linewidth = 1, label='Point of impact', color='purple')
+
+        # Point of impact plus
+        ax.plot([pore_pressure.min_deceleration, pore_pressure.max_measured_pressure], [pore_pressure.point_of_impact_plus, pore_pressure.point_of_impact_plus],
+                linestyle='--', linewidth = 1, label='Point of impact + 8.833cm', color='black')
+        
+        # Measured pressure
+        ax.plot(pore_pressure.measured_pressure, pore_pressure.depth, linestyle='-', linewidth='1', label='Measured Pressure', color='green')
+
+        # Bernouli pressure
+        ax.plot(pore_pressure.bernoulli_pressure, pore_pressure.depth, linestyle='-', linewidth='1', label='Bernouli Pressure', color='pink')
+
+        ax.legend(loc='upper right')
+        ax.set_xlabel('dec(m/s2), v(m/s), and Pressure (kPa)')
+        ax.set_ylabel('Vertical Distance (m)')
+        ax.set_title('Pressures')
+
+
+    figure_manager.display(plot)
+
+
+

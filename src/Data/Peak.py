@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import integrate
 
 # Represents a peak where the penetrometer has hit the ground
@@ -32,6 +31,7 @@ class Peak:
         """
         # grabs max height of peak
         self.peak_center = penetrometer_data.peaks[peak_num]
+        self.offset = 0
         
         # determines bounds of peak to copy data from
         if self.peak_center <= 1500:
@@ -132,6 +132,7 @@ class Peak:
         self.g250g = penetrometer_data.g250g[self.start:self.end+1].copy()
         self.g200g = penetrometer_data.g200g[self.start:self.end+1].copy()
         self.g50g = penetrometer_data.g50g[self.start:self.end+1].copy()
+        self.g50g_whole = penetrometer_data.g50g.copy()
         self.g18g = penetrometer_data.g18g[self.start:self.end+1].copy()
         self.g2g = penetrometer_data.g2g[self.start:self.end+1].copy()
         self.gX55g = penetrometer_data.gX55g[self.start:self.end+1].copy()
@@ -186,6 +187,7 @@ class Peak:
         if offset is None:
             offset = self._get_meter_offset(meter_to_analyze) 
 
+        self.offset = offset
         self.peak = spliced_meter - offset
         
     def _get_meter_offset(self, meter):
