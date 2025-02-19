@@ -207,11 +207,10 @@ def main():
         spike = display_peak(fig_manager, peak.peak, peak.g2g, peak.end_of_drop, peak.peak_center) # select_spike(peak, fig_manager)
         peak.integrate_spike(spike)
 
-        display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity)
 
         # Get input for type of correction log, asinh, or beta
         # Once spike is selected, prompt user to select a QSBC correction equation
-        correction_type = get_correction_type()
+        correction_type = display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity) #get_correction_type()
 
         # TODO prompt user for correction factor and tip_type
         correction_factor = 1.5

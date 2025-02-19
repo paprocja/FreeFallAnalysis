@@ -17,7 +17,7 @@ def display_peak(figure_manager, peak, g2g, drop_end, peak_center):
 
     figure_manager.add_text_box("Enter Spike Selection: ", [0.15, 0.05, 0.1, 0.05], 'spike')
     figure_manager.add_button("Confirm", [0.26, 0.05, 0.1, 0.05])
-    
+
     input_values = figure_manager.wait_for_valid_inputs()
     return int(input_values["Enter Spike Selection: "])
 
@@ -36,6 +36,11 @@ def display_decel_vel_dep(figure_manager, depth, decelleration, velocity):
         ax.legend(loc='upper right')
 
     figure_manager.display(plot)
+    figure_manager.add_text_box("Enter Correction Type: ", [0.15, 0.01, 0.1, 0.05], 'correction')
+    figure_manager.add_button("Confirm", [0.26, 0.01, 0.1, 0.05])
+    figure_manager.add_info_text()
+    input_values = figure_manager.wait_for_valid_inputs()
+    return int(input_values["Enter Correction Type: "])
 
 def display_QSBC_for_K(figure_manager, qsbc_for_k):
     """

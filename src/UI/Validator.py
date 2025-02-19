@@ -9,8 +9,16 @@ class Validator:
     def validate(self, data):
         if self.type == 'peak':
             return self.is_valid_peak(data)
-        if self.type == 'spike':
+        elif self.type == 'spike':
             return self.is_valid_spike(data)
+        elif self.type == 'correction':
+            return self.is_valid_correction_type(data)
+        else:
+            return False
+        
+    def is_valid_correction_type(self, correction_val):
+        if int(correction_val) in range(1,4):
+            return True
         else:
             return False
 

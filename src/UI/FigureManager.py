@@ -83,6 +83,7 @@ class FigureManager:
         if validator.validate(text):  # Apply the validation rule using the validator instance
             self.valid_inputs[label] = True
             self.remove_invalid_text()
+           
         else:
             self.valid_inputs[label] = False
             self.add_invalid_text()
@@ -93,32 +94,43 @@ class FigureManager:
         while not self.is_ready:
             plt.waitforbuttonpress(timeout=0.1)
         self.is_ready = False
+        self.remove_info_text()
         return self.text_values  # Return valid inputs
-
+    
+    def add_info_text(self):
+        if hasattr(self, 'info_ax'):
+            self.info_ax.remove()
+        self.info_ax = self.fig.add_axes([0.02, 0.07, 0.34, 0.05], facecolor='lightgrey')
+        self.info_ax.set_xticks([])
+        self.info_ax.set_yticks([])
+        self.info_text = self.info_ax.text(0.5, 0.5, "1 for Log, 2 for Asinh, 3 for Beta", 
+                                           ha='center', va='center',
+                                           color='black', fontsize=12, fontweight='bold')
+        
+    def remove_info_text(self):
+        if hasattr(self, 'info_ax'):
+            self.info_ax.remove()
+            del self.info_ax
 
     def add_invalid_text(self):
         """ Adds text to the figure to indicate invalid input. """
         message_height = 0.05  # Height of the message area
-        if hasattr(self, 'message_ax'):
-            self.message_ax.remove()  # Clear previous messages
+        if hasattr(self, 'invalid_ax'):
+            self.invalid_ax.remove()  # Clear previous messages
     
         # Create a new axes for the message at the bottom of the figure
-        self.message_ax = self.fig.add_axes([0.38, 0.05, 0.5, message_height], facecolor='lightgrey')
-        self.message_ax.set_xticks([])
-        self.message_ax.set_yticks([])
+        self.invalid_ax = self.fig.add_axes([0.38, 0.05, 0.5, message_height], facecolor='lightgrey')
+        self.invalid_ax.set_xticks([])
+        self.invalid_ax.set_yticks([])
 
         # Display the message in the newly created message area
-        self.invalid_text = self.message_ax.text(0.5, 0.5, "Invalid input, please try again", 
+        self.invalid_text = self.invalid_ax.text(0.5, 0.5, "Invalid input, please try again", 
                                                 ha='center', va='center', 
                                                 color='red', fontsize=12, fontweight='bold')
         # self.fig.canvas.draw_idle()
         
     def remove_invalid_text(self):
         """ Removes invalid input text from the figure. """
-        if hasattr(self, 'message_ax'):
-            self.message_ax.remove()
-            del self.message_ax  # Clean up the reference
-
-        if hasattr(self, 'invalid_text'):
-            self.invalid_text.remove()
-            del self.invalid_text
+        if hasattr(self, 'invalid_ax'):
+            self.invalid_ax.remove()
+            del self.invalid_ax  # Clean up the reference
