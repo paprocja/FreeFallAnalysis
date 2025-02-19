@@ -25,7 +25,7 @@ def display_initial_data(figure_manager, g2g, g18g, g50g, g200g, g250g, peaks, h
 
     
     # Add a text box for the peak input with validation using the existing validator
-    figure_manager.add_text_box("Enter Peak Number: ", [0.15, 0.05, 0.1, 0.05], figure_manager.validator.is_valid_peak)
+    figure_manager.add_text_box("Enter Peak Number: ", [0.15, 0.05, 0.1, 0.05], 'peak')
     figure_manager.add_button("Confirm", [0.26, 0.05, 0.1, 0.05])
     # Wait for valid input
     input_values = figure_manager.wait_for_valid_inputs()

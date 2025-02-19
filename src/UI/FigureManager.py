@@ -10,7 +10,7 @@ class FigureManager:
         self.buttons = []  # Store references to dynamically created buttons
         self.text_boxes = {}
         self.text_values = {}
-        self.validation_rules = {}
+        self.validation_types = {}
         self.valid_inputs = {}
         self.validator = Validator()  # Only instantiate once, re-use it
         self.is_ready = False
@@ -31,7 +31,7 @@ class FigureManager:
             text_box.ax.remove()  # Correctly access text_box
         self.text_boxes.clear()
         self.text_values.clear()
-        self.validation_rules.clear()
+        self.validation_types.clear()
         self.valid_inputs.clear()
 
     def display(self, plot_function, nrows=1, ncols=1, *args, **kwargs):
@@ -62,7 +62,7 @@ class FigureManager:
         if all(self.valid_inputs.values()):
             self.is_ready = True
 
-    def add_text_box(self, label, position, validation_rule):
+    def add_text_box(self, label, position, validation_type):
         """ Adds a text box and sets up validation. """
         ax_box = self.fig.add_axes(position)
         text_box = TextBox(ax_box, label)
@@ -72,14 +72,15 @@ class FigureManager:
         
         self.text_boxes[label] = text_box
         self.text_values[label] = ""
-        self.validation_rules[label] = validation_rule  # Store validation function
+        self.validation_types[label] = validation_type  # Store validation function
         self.valid_inputs[label] = False  # Mark as not valid initially
 
     def store_text(self, label, validator, text):
         """ Stores input, validates it, and updates status. """
         self.text_values[label] = text
+        validator.set_type(self.validation_types[label])
         # Call the validation method (e.g., is_valid_peak) on the validator instance
-        if validator.is_valid_peak(text):  # Apply the validation rule using the validator instance
+        if validator.validate(text):  # Apply the validation rule using the validator instance
             self.valid_inputs[label] = True
             self.remove_invalid_text()
         else:
@@ -91,6 +92,7 @@ class FigureManager:
         """Waits until all text boxes contain valid values."""
         while not self.is_ready:
             plt.waitforbuttonpress(timeout=0.1)
+        self.is_ready = False
         return self.text_values  # Return valid inputs
 
 

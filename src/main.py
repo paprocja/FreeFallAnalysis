@@ -201,10 +201,10 @@ def main():
         # Prompt user to select a peak
         peak = Peak(peak_num=peak_number-1, penetrometer_data=penetrometer_data)
 
-        display_peak(fig_manager, peak.peak, peak.g2g, peak.end_of_drop, peak.peak_center)
+        
 
         # Once peak is selected, prompt user to select a spike within the peak
-        spike = select_spike(peak, fig_manager)
+        spike = display_peak(fig_manager, peak.peak, peak.g2g, peak.end_of_drop, peak.peak_center) # select_spike(peak, fig_manager)
         peak.integrate_spike(spike)
 
         display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity)
