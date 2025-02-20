@@ -38,6 +38,7 @@ def display_peaks_and_ppm(figure_manager, penetrometer_data, pressure_start=0, p
 
 def display_deceleration_profile(figure_manager, pore_pressure: PorePressure, start=0, end=0, display_range=False):
     def plot(ax):
+        ax.set_xlim(0, len(pore_pressure.deceleration_profile) + 10)
         ax.plot(pore_pressure.deceleration_profile, linestyle='-', linewidth=.5, label="2g", color='blue')
         ax.set_title('Deceleration Profile')
 
@@ -49,8 +50,10 @@ def display_deceleration_profile(figure_manager, pore_pressure: PorePressure, st
 
 def display_pore_pressure(figure_manager, pore_pressure: PorePressure):
     def plot(ax):
+        ax.set_xlim(-25, max(pore_pressure.hydrostatic_pressure) + 25)
+
         # Deceleration
-        ax.plot(pore_pressure.specific_deceleration, pore_pressure.depth, linestyle='-', linewidth='0.5', label='Dec (m/s2)', color='blue')
+        ax.plot(pore_pressure.raw_deceleration, pore_pressure.depth, linestyle='-', linewidth='0.5', label='Dec (g)', color='blue')
 
         # Velocity
         ax.plot(pore_pressure.velocity, pore_pressure.depth, linestyle='-', linewidth='0.5', label='Velocity (m/s)', color='red')
@@ -73,7 +76,7 @@ def display_pore_pressure(figure_manager, pore_pressure: PorePressure):
         ax.plot(pore_pressure.bernoulli_pressure, pore_pressure.depth, linestyle='-', linewidth='1', label='Bernouli Pressure', color='pink')
 
         ax.legend(loc='upper right')
-        ax.set_xlabel('dec(m/s2), v(m/s), and Pressure (kPa)')
+        ax.set_xlabel('dec(g), v(m/s), and Pressure (kPa)')
         ax.set_ylabel('Vertical Distance (m)')
         ax.set_title('Pressures')
 

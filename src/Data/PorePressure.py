@@ -55,9 +55,8 @@ class PorePressure:
         self.depth = depth
 
     def calculate_pore_pressure(self, start, end):
-        GRAVITY = 9.8063799127023900260141488920588
-        DEPTH_CONSTANT = 0.08833
-        PRESSURE_COEFFICIENT = 0.5
+        TIP_PRESSURE_DISTANCE = 0.08833 # Hard coded now but varies with the tip
+        PRESSURE_COEFFICIENT = 0.5 # From a paper can vary
 
         # Assign member variables
         self.deceleration_start = start
@@ -70,10 +69,9 @@ class PorePressure:
 
         # Get the point of impact and impact with depth constant
         self.point_of_impact = self.depth[self.deceleration_start]
-        self.point_of_impact_plus = self.point_of_impact + DEPTH_CONSTANT
+        self.point_of_impact_plus = self.point_of_impact + TIP_PRESSURE_DISTANCE
 
         # Assign variables for plotting
-        self.specific_deceleration = self.raw_deceleration * GRAVITY
         self.hydrostatic_pressure = self.depth * -9.807
         self.max_measured_pressure = max(self.hydrostatic_pressure) + 50
 

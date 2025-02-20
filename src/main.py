@@ -204,7 +204,7 @@ def get_do_pore_pressure_calculations():
 
 def get_pore_pressure_bounds(figure_manager, penetrometer_data):
     def is_valid_start(input):
-        return input > 0
+        return input > 0 and input < len(penetrometer_data.g50g)
 
     input_msg_start = 'Where does the pore pressure start to increase?\n'
     input_msg_end = 'Where does the pore pressure start to plateau?\n'
@@ -214,7 +214,7 @@ def get_pore_pressure_bounds(figure_manager, penetrometer_data):
     pore_pressure_start = io.prompt_user_for_val(input_msg_start, valid_msg_start, is_valid_start)
 
     def is_valid_end(input, start=pore_pressure_start):
-        return input > 0 and input > start
+        return input > 0 and input > start and input < len(penetrometer_data.g50g)
 
     pore_pressure_end = io.prompt_user_for_val(input_msg_end, valid_msg_end, is_valid_end)
 
@@ -231,7 +231,7 @@ def get_pore_pressure_bounds(figure_manager, penetrometer_data):
 
 def get_deceleration_profile_bounds(figure_manager, pore_pressure):
     def is_valid_start(input):
-        return input > 0 and input < pore_pressure.end
+        return input > 0 and input < pore_pressure.pressure_end
 
     input_msg_start = 'Where does the deceleration profile start to increase?\n'
     input_msg_end = 'Where does the deceleration profile end?\n'
@@ -241,7 +241,7 @@ def get_deceleration_profile_bounds(figure_manager, pore_pressure):
     profile_start = io.prompt_user_for_val(input_msg_start, valid_msg_start, is_valid_start)
 
     def is_valid_end(input, start=profile_start):
-        return input > start and input < pore_pressure.end
+        return input > start and input < pore_pressure.pressure_end
 
     profile_end = io.prompt_user_for_val(input_msg_end, valid_msg_end, is_valid_end)
 
@@ -252,11 +252,9 @@ def get_deceleration_profile_bounds(figure_manager, pore_pressure):
         
         profile_start = io.prompt_user_for_val(input_msg_start, valid_msg_start, is_valid_start)
         profile_end = io.prompt_user_for_val(input_msg_end, valid_msg_end, is_valid_end)
-        user_happy = io.confirm_deceleration_profile_range(figure_manager, penetrometer_data, profile_start, profile_end)
+        user_happy = io.confirm_deceleration_profile_range(figure_manager, pore_pressure, profile_start, profile_end)
 
     return profile_start, profile_end
-
-
 
 def main():
     # Starts file selection UI
@@ -313,29 +311,29 @@ def main():
         # Get the tilt in the x and y directions
         tilt_x, tilt_y = calculate_tilt(spike, peak.end_of_drop, peak.gX55g, peak.gY55g)
 
-        print(f'Tilt x: {tilt_x}, Tilt y: {tilt_y}')
+        print(f'Tilt x: {tilt_x}, Tilt y: {tilt_y}\n')
 
         # Determine if this is the first peak and if the user would like to calculate pore pressure for that peak
         if do_calculate_pore_pressure:
             display_peaks_and_ppm(fig_manager, penetrometer_data)
 
-        # Get the bounds of the pore pressure for the first peak
-        pore_pressure_start, pore_pressure_end = get_pore_pressure_bounds(fig_manager, penetrometer_data)
+            # Get the bounds of the pore pressure for the first peak
+            pore_pressure_start, pore_pressure_end = get_pore_pressure_bounds(fig_manager, penetrometer_data)
 
-        # Create PorePressure object calculate deceleration profile based on bounds
-        pore_pressure = PorePressure(peak, pore_pressure_start, pore_pressure_end)
+            # Create PorePressure object calculate deceleration profile based on bounds
+            pore_pressure = PorePressure(peak, penetrometer_data, pore_pressure_start, pore_pressure_end)
 
-        pore_pressure.calculate_deceleration_profile()
+            pore_pressure.calculate_deceleration_profile()
 
-        display_deceleration_profile(fig_manager, pore_pressure)
+            display_deceleration_profile(fig_manager, pore_pressure)
 
-        # Get the bounds of the deceleration profile
-        profile_increase, profile_decrease = get_deceleration_profile_bounds(fig_manager, pore_pressure)
+            # Get the bounds of the deceleration profile
+            profile_increase, profile_decrease = get_deceleration_profile_bounds(fig_manager, pore_pressure)
 
-        # Calculate and display pore pressure based on profile bounds
-        pore_pressure.calculate_pore_pressure(profile_increase, profile_decrease)
+            # Calculate and display pore pressure based on profile bounds
+            pore_pressure.calculate_pore_pressure(profile_increase, profile_decrease)
 
-        display_pore_pressure(fig_manager, pore_pressure)
+            display_pore_pressure(fig_manager, pore_pressure)
 
         # Prompt user to restart
         running = restart()
