@@ -62,6 +62,7 @@ class FigureManager:
         plt.show(block=False)
 
     def save_to_png(self, event):
+        #Save to fig file format
         filename = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         plt.savefig('saved_data/' + 'figure_' + filename + '.png')
 

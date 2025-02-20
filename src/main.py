@@ -41,7 +41,6 @@ def save_to_csv():
     # TODO make it so main can be executed anywhere on the system for packaging
     penetrometer_data.save_data('saved_data/' + 'raw_data_' + datetime.now().strftime("%Y-%m-%d_%H%M%S") + '.csv')
 
-
 def restart() -> bool:
     """
     Prompts user for yes/no response on restarting the program. 

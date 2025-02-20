@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
 
+#TODO: Include area
 def display_peak(figure_manager, peak, g2g, drop_end, peak_center, save_data, filename="peak_data"):
     """
     Displays the peak using the figure manager.
@@ -23,22 +24,22 @@ def display_peak(figure_manager, peak, g2g, drop_end, peak_center, save_data, fi
 
     figure_manager.display(plot)
 
-def display_decel_vel_dep(figure_manager, depth, decelleration, velocity, save_data, filename="decel_vel_dep"):
+def display_decel_vel_dep(figure_manager, depth, deceleration, velocity, save_data, filename="decel_vel_dep"):
     """
     Displays the deceleration, velocity, and depth data in one plot.
     """
     def plot(ax):
         ax.invert_yaxis()
         ax.set_ylim(max(depth), 0)
-        ax.set_xlim(0, max(max(decelleration), max(velocity)))
-        ax.plot(decelleration, depth, linestyle='-', label='Deceleration')
+        ax.set_xlim(0, max(max(deceleration), max(velocity)))
+        ax.plot(deceleration, depth, linestyle='-', label='Deceleration')
         ax.plot(velocity, depth, linestyle='--', label='Velocity')
         ax.set_ylabel('Depth [Meters]')
         ax.set_xlabel('Deceleration [g] // Velocity [m/s]')
         ax.legend(loc='upper right')
 
     if save_data:
-        df = pd.DataFrame({"Decelleration": decelleration, "Velocity": velocity, "Depth": depth})
+        df = pd.DataFrame({"Deceleration": deceleration, "Velocity": velocity, "Depth (M)": depth})
         filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
 
@@ -64,7 +65,7 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k, save_data, filename="bearing_
 
 
 def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
-                            depth, velocity, decelleration, qdyn, start, end, save_data, filename="corrected_qsbc"):
+                            depth, velocity, deceleration, qdyn, start, end, save_data, filename="corrected_qsbc"):
     """
     Displays the corrected quasi static bearing capacity
     """
@@ -74,8 +75,8 @@ def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val
         #plot the decel and velocity to the left side of figure
         ax[0].invert_yaxis()
         ax[0].set_ylim(max(depth), 0)
-        ax[0].set_xlim(0, max(max(decelleration), max(velocity)))
-        ax[0].plot(decelleration, depth, linestyle='-', label='Deceleration')
+        ax[0].set_xlim(0, max(max(deceleration), max(velocity)))
+        ax[0].plot(deceleration, depth, linestyle='-', label='Deceleration')
         ax[0].plot(velocity, depth, linestyle='--', label='Velocity')
         ax[0].set_ylabel('Depth [Meters]')
         ax[0].set_xlabel('Deceleration [g] // Velocity [m/s]')
@@ -104,7 +105,8 @@ def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val
         ax[1].legend(loc='upper right')
 
     if save_data:
-        df = pd.DataFrame({"First Corrected Line Average": line1ave, "Second Corrected Line Average": line2ave, "Dynamic Bearing Capacity": qdyn[start:end+1] / 1000, "Corrected Depth": corrected_depth})
+        #Save area and strain-rate correction factor
+        df = pd.DataFrame({"Dynamic Bearing Capacity": qdyn[start:end+1] / 1000, "Depth(CM)": corrected_depth})
         filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
 
