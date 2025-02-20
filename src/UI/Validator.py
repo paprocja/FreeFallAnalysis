@@ -3,16 +3,45 @@ class Validator:
         self.num_peaks = None  # Default value for num_peaks
         self.type = None
         
+        
     def set_type(self, type):
         self.type = type
 
-    def validate(self, data):
+
+    def validate(self, data, start=None, end=None):
         if self.type == 'peak':
             return self.is_valid_peak(data)
         elif self.type == 'spike':
             return self.is_valid_spike(data)
         elif self.type == 'correction':
             return self.is_valid_correction_type(data)
+        elif self.type == 'start':
+            return self.is_valid_start(data, end)
+        elif self.type == 'end':
+            return self.is_valid_end(data, start)
+        else:
+            return False
+        
+
+    def is_valid_start(self, start, end):
+        if start == "":
+            return False
+        if end is not None:
+            if int(start) >= 0 and int(start) <= 85 and int(start) < int(end):
+                return True
+            else:
+                return False
+        else:
+            return False
+        
+    def is_valid_end(self, end, start):
+        if end == "":
+            return False
+        if start is not None:
+            if int(end) > int(start) and int(end) <= 86:
+                return True
+            else:
+                return False
         else:
             return False
         

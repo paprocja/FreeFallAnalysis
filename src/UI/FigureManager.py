@@ -14,6 +14,8 @@ class FigureManager:
         self.valid_inputs = {}
         self.validator = Validator()  # Only instantiate once, re-use it
         self.is_ready = False
+        self.start = None
+        self.end = None
 
     def clear(self):
         """Clears the current axes and resets the figure."""
@@ -79,14 +81,34 @@ class FigureManager:
         """ Stores input, validates it, and updates status. """
         self.text_values[label] = text
         validator.set_type(self.validation_types[label])
-        # Call the validation method (e.g., is_valid_peak) on the validator instance
-        if validator.validate(text):  # Apply the validation rule using the validator instance
-            self.valid_inputs[label] = True
-            self.remove_invalid_text()
-           
+        if validator.type == 'end':
+            if validator.validate(text, start=self.start):  # Apply the validation rule using the validator instance
+                self.valid_inputs[label] = True
+                self.end = text
+                validator.set_type('start')
+                if validator.validate(self.text_values['start'], end=self.end):
+                    self.valid_inputs['start'] = True
+                self.remove_invalid_text()
+            else:
+                self.valid_inputs[label] = False
+                self.add_invalid_text()
+        elif validator.type == 'start':
+            if validator.validate(text, end=self.end):  # Apply the validation rule using the validator instance
+                self.valid_inputs[label] = True
+                self.start = text
+                self.remove_invalid_text()
+            else:
+                self.valid_inputs[label] = False
+                self.add_invalid_text()
         else:
-            self.valid_inputs[label] = False
-            self.add_invalid_text()
+            # Call the validation method (e.g., is_valid_peak) on the validator instance
+            if validator.validate(text):  # Apply the validation rule using the validator instance
+                self.valid_inputs[label] = True
+                self.remove_invalid_text()
+            
+            else:
+                self.valid_inputs[label] = False
+                self.add_invalid_text()
 
   
     def wait_for_valid_inputs(self):

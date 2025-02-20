@@ -53,8 +53,20 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k):
         ax.set_title('Depth x Bearing Capacity')
         ax.legend(loc='upper right')
 
+    # TODO finish adding the buttons for the range start and end
+
     figure_manager.display(plot)
 
+    # for input colection
+    figure_manager.add_text_box("Enter Start Time: ", [0.15, 0.07, 0.1, 0.05], 'start')
+    figure_manager.add_text_box("Enter End Time: ", [0.15, 0.01, 0.1, 0.05], 'end')
+    figure_manager.add_button("Confirm", [0.26, 0.03, 0.1, 0.05])
+    input_values = figure_manager.wait_for_valid_inputs()
+    start = int(input_values["Enter Start Time: "])
+    end = int(input_values["Enter End Time: "])
+    return start, end
+
+    # TODO return the start and end values
 
 def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
                             depth, velocity, decelleration, qdyn, start, end):

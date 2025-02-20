@@ -201,12 +201,10 @@ def main():
         # Prompt user to select a peak
         peak = Peak(peak_num=peak_number-1, penetrometer_data=penetrometer_data)
 
-        
-
+    
         # Once peak is selected, prompt user to select a spike within the peak
         spike = display_peak(fig_manager, peak.peak, peak.g2g, peak.end_of_drop, peak.peak_center) # select_spike(peak, fig_manager)
         peak.integrate_spike(spike)
-
 
         # Get input for type of correction log, asinh, or beta
         # Once spike is selected, prompt user to select a QSBC correction equation
@@ -219,11 +217,10 @@ def main():
         initial_qsbc = peak.calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
 
         # Will also need to pass in the tip type when not using default to c
-        display_QSBC_for_K(fig_manager, initial_qsbc)
         
         # Tuple used to find start and end values. Could be changed so parameters are not needed for average calculation
-        start, end = get_range_vals(initial_qsbc)
-
+        start, end = display_QSBC_for_K(fig_manager, initial_qsbc)  # get_range_vals(initial_qsbc)
+        print(start, end)
         line1val1, line1val2, line1ave, line2val1, line2val2, line2ave = peak.calculate_corrected_qsbc(correction_type, start, end)
 
         # Currently hard coded to use values 1 and 1.5, but whatever values are needed for graph can be used
