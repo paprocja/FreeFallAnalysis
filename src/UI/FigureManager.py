@@ -82,19 +82,20 @@ class FigureManager:
         self.text_values[label] = text
         validator.set_type(self.validation_types[label])
         if validator.type == 'end':
-            if validator.validate(text, start=self.start):  # Apply the validation rule using the validator instance
+            self.end = text
+            if validator.validate(self.start, text):  # Apply the validation rule using the validator instance
                 self.valid_inputs[label] = True
+                self.valid_inputs["Enter Start Time: "] = True
                 self.end = text
-                validator.set_type('start')
-                if validator.validate(self.text_values['start'], end=self.end):
-                    self.valid_inputs['start'] = True
                 self.remove_invalid_text()
             else:
                 self.valid_inputs[label] = False
                 self.add_invalid_text()
         elif validator.type == 'start':
-            if validator.validate(text, end=self.end):  # Apply the validation rule using the validator instance
+            self.start = text
+            if validator.validate(text, self.end):  # Apply the validation rule using the validator instance
                 self.valid_inputs[label] = True
+                self.valid_inputs["Enter End Time: "] = True
                 self.start = text
                 self.remove_invalid_text()
             else:
@@ -114,7 +115,7 @@ class FigureManager:
     def wait_for_valid_inputs(self):
         """Waits until all text boxes contain valid values."""
         while not self.is_ready:
-            plt.waitforbuttonpress(timeout=0.1)
+            plt.pause(0.1)
         self.is_ready = False
         self.remove_info_text()
         return self.text_values  # Return valid inputs

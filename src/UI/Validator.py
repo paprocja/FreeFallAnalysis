@@ -8,7 +8,7 @@ class Validator:
         self.type = type
 
 
-    def validate(self, data, start=None, end=None):
+    def validate(self, data, data2=None):
         if self.type == 'peak':
             return self.is_valid_peak(data)
         elif self.type == 'spike':
@@ -16,35 +16,23 @@ class Validator:
         elif self.type == 'correction':
             return self.is_valid_correction_type(data)
         elif self.type == 'start':
-            return self.is_valid_start(data, end)
+            return self.is_valid_start_and_end(data, data2)
         elif self.type == 'end':
-            return self.is_valid_end(data, start)
+            return self.is_valid_start_and_end(data, data2)
         else:
             return False
         
 
-    def is_valid_start(self, start, end):
-        if start == "":
+    def is_valid_start_and_end(self, start, end):
+        if start == "" or start is None:
             return False
-        if end is not None:
-            if int(start) >= 0 and int(start) <= 85 and int(start) < int(end):
-                return True
-            else:
-                return False
+        if end == "" or end is None:
+            return False
+        if int(start) >= 0 and int(start) < int(end) and int(end) <= 86:
+            return True
         else:
             return False
-        
-    def is_valid_end(self, end, start):
-        if end == "":
-            return False
-        if start is not None:
-            if int(end) > int(start) and int(end) <= 86:
-                return True
-            else:
-                return False
-        else:
-            return False
-        
+    
     def is_valid_correction_type(self, correction_val):
         if int(correction_val) in range(1,4):
             return True
