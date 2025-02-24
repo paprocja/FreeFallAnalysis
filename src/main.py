@@ -3,11 +3,13 @@ import os
 import UI.FileSelectUI as FileSelectUI
 import Utils.io_utils as io
 from UI.Figures.PeakDisplay import *
+from UI.Figures.PorePressureDisplay import *
 from UI.Figures.PenetrometerDataDisplay import display_initial_data
 from Data.TiltCalculator import calculate_tilt
 from UI.FigureManager import FigureManager
 from Data.PenetrometerData import PenetrometerData
 from Data.Peak import Peak
+from Data.PorePressure import PorePressure
 
 #from Utils.io_utils import prompt_user_for_val, confirm_input_range, confirm_input_spike
 
@@ -86,7 +88,7 @@ def select_peak() -> Peak:
     selected_peak = Peak(peak_num=peak_number-1, penetrometer_data=penetrometer_data)
     return selected_peak
 
-def select_spike(peak: Peak, fig_manager: FigureManager) -> int:
+def select_spike(fig_manager: FigureManager, peak: Peak) -> int:
     prompt_msg = f"Select a spike within the peak:\n"
     happy = "Valid spike selected.\n"
     val = io.prompt_user_for_val(prompt_msg, happy, lambda _: True)
@@ -170,17 +172,89 @@ def get_range_vals(qsbc_for_K):
 
     end = io.prompt_user_for_val(f"End time stamp?\n", "Valid ending point\n", is_valid_end)
 
-    user_happy = io.confirm_input_range(fig_manager, qsbc_for_K, start, end)
+    user_happy = io.confirm_peak_range(fig_manager, qsbc_for_K, start, end)
 
     while (user_happy is False):
         display_QSBC_for_K(fig_manager, qsbc_for_K)
 
         start = io.prompt_user_for_val(f"Start time stamp?\n", "Valid starting point\n", is_valid_start)
         end = io.prompt_user_for_val(f"End time stamp?\n", "Valid ending point\n", is_valid_end)
-        user_happy = io.confirm_input_range(fig_manager, qsbc_for_K, start, end)
+        user_happy = io.confirm_peak_range(fig_manager, qsbc_for_K, start, end)
 
     return start, end
 
+def get_do_pore_pressure_calculations():
+    def is_valid(input):
+        return input == 0 or input == 1
+
+    input_msg = """Would you like to calculate Pore Pressure based on this Peak? (1 for yes, 0 for no)
+        NOTE: the selected Peak must be the first Peak in the drop or else
+        the calculations will not be accurate.\n"""
+    
+    calculate_pore_pressure = io.prompt_user_for_val(input_msg, "Thank you for your selection.\n", is_valid)
+
+    if calculate_pore_pressure == 1:
+        calculate_pore_pressure = True
+        print("This run will calculate Pore Pressure.\n")
+    else:
+        calculate_pore_pressure = False
+        print("This run will not calculate Pore Pressure.\n")
+
+    return calculate_pore_pressure
+
+def get_pore_pressure_bounds(figure_manager, penetrometer_data):
+    def is_valid_start(input):
+        return input > 0 and input < len(penetrometer_data.g50g)
+
+    input_msg_start = 'Where does the pore pressure start to increase?\n'
+    input_msg_end = 'Where does the pore pressure start to plateau?\n'
+    valid_msg_start = "Valid start selected.\n"
+    valid_msg_end = "Valid end selected.\n"
+
+    pore_pressure_start = io.prompt_user_for_val(input_msg_start, valid_msg_start, is_valid_start)
+
+    def is_valid_end(input, start=pore_pressure_start):
+        return input > 0 and input > start and input < len(penetrometer_data.g50g)
+
+    pore_pressure_end = io.prompt_user_for_val(input_msg_end, valid_msg_end, is_valid_end)
+
+    user_happy = io.confirm_pore_pressure_range(figure_manager, penetrometer_data, pore_pressure_start, pore_pressure_end)
+
+    while (user_happy is False):
+        display_peaks_and_ppm(fig_manager, penetrometer_data)
+        
+        pore_pressure_start = io.prompt_user_for_val(input_msg_start, valid_msg_start, is_valid_start)
+        pore_pressure_end = io.prompt_user_for_val(input_msg_end, valid_msg_end, is_valid_end)
+        user_happy = io.confirm_pore_pressure_range(figure_manager, penetrometer_data, pore_pressure_start, pore_pressure_end)
+
+    return pore_pressure_start, pore_pressure_end
+
+def get_deceleration_profile_bounds(figure_manager, pore_pressure):
+    def is_valid_start(input):
+        return input > 0 and input < pore_pressure.pressure_end
+
+    input_msg_start = 'Where does the deceleration profile start to increase?\n'
+    input_msg_end = 'Where does the deceleration profile end?\n'
+    valid_msg_start = "Valid start selected.\n"
+    valid_msg_end = "Valid end selected.\n"
+
+    profile_start = io.prompt_user_for_val(input_msg_start, valid_msg_start, is_valid_start)
+
+    def is_valid_end(input, start=profile_start):
+        return input > start and input < pore_pressure.pressure_end
+
+    profile_end = io.prompt_user_for_val(input_msg_end, valid_msg_end, is_valid_end)
+
+    user_happy = io.confirm_deceleration_profile_range(figure_manager, pore_pressure, profile_start, profile_end)
+
+    while (user_happy is False):
+        display_deceleration_profile(fig_manager, pore_pressure)
+        
+        profile_start = io.prompt_user_for_val(input_msg_start, valid_msg_start, is_valid_start)
+        profile_end = io.prompt_user_for_val(input_msg_end, valid_msg_end, is_valid_end)
+        user_happy = io.confirm_deceleration_profile_range(figure_manager, pore_pressure, profile_start, profile_end)
+
+    return profile_start, profile_end
 
 def main():
     # Starts file selection UI
@@ -200,6 +274,9 @@ def main():
 
         # Prompt user to select a peak
         peak = Peak(peak_num=peak_number-1, penetrometer_data=penetrometer_data)
+
+        # Determine if this peak will be used to calculate pore pressure
+        do_calculate_pore_pressure = get_do_pore_pressure_calculations()
 
     
         # Once peak is selected, prompt user to select a spike within the peak
@@ -227,9 +304,32 @@ def main():
         display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
                                 peak.depth, peak.velocity, peak.decelleration, peak.qdyn, start, end)
 
+        # Get the tilt in the x and y directions
         tilt_x, tilt_y = calculate_tilt(spike, peak.end_of_drop, peak.gX55g, peak.gY55g)
 
-        print(f'Tilt x: {tilt_x}, Tilt y: {tilt_y}')
+        print(f'Tilt x: {tilt_x}, Tilt y: {tilt_y}\n')
+
+        # Determine if this is the first peak and if the user would like to calculate pore pressure for that peak
+        if do_calculate_pore_pressure:
+            display_peaks_and_ppm(fig_manager, penetrometer_data)
+
+            # Get the bounds of the pore pressure for the first peak
+            pore_pressure_start, pore_pressure_end = get_pore_pressure_bounds(fig_manager, penetrometer_data)
+
+            # Create PorePressure object calculate deceleration profile based on bounds
+            pore_pressure = PorePressure(peak, penetrometer_data, pore_pressure_start, pore_pressure_end)
+
+            pore_pressure.calculate_deceleration_profile()
+
+            display_deceleration_profile(fig_manager, pore_pressure)
+
+            # Get the bounds of the deceleration profile
+            profile_increase, profile_decrease = get_deceleration_profile_bounds(fig_manager, pore_pressure)
+
+            # Calculate and display pore pressure based on profile bounds
+            pore_pressure.calculate_pore_pressure(profile_increase, profile_decrease)
+
+            display_pore_pressure(fig_manager, pore_pressure)
 
         # Prompt user to restart
         running = restart()

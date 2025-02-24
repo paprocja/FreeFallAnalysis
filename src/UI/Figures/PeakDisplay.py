@@ -1,10 +1,9 @@
-import matplotlib.pyplot as plt
-
 def display_peak(figure_manager, peak, g2g, drop_end, peak_center):
     """
     Displays the peak using the figure manager.
     """
     def plot(ax):
+        ax.set_xlim(0, len(peak) + 10)
         ax.plot(peak, label='peak')
         ax.plot(g2g, label ='2g')
         ax.scatter(drop_end, peak[drop_end], marker='x', label='End of drop', color='black')
@@ -47,6 +46,7 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k):
     Displays the quasi static bearing capacity
     """
     def plot(ax):
+        ax.set_xlim(0, len(qsbc_for_k) + 10)
         ax.plot(qsbc_for_k, label='QSBC')
         ax.set_xlabel('Bearing Capacity')
         ax.set_ylabel('Depth')
@@ -75,7 +75,6 @@ def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val
     """
     corrected_depth = depth[start:end+1]*100
     def plot(ax):
-
         #plot the decel and velocity to the left side of figure
         ax[0].invert_yaxis()
         ax[0].set_ylim(max(depth), 0)
@@ -117,6 +116,7 @@ def display_selected_peak(fig_manager, val, peak):
     Displays the peak using the figure manager.
     """
     def plot(ax):
+        ax.set_xlim(0, len(peak.peak) + 10)
         ax.plot(peak.peak, label='peak')
         ax.plot(peak.g2g, label ='2g')
         ax.scatter(peak.end_of_drop, peak.peak[peak.end_of_drop], marker='x', label='End of drop', color='black')
@@ -124,17 +124,18 @@ def display_selected_peak(fig_manager, val, peak):
         ax.set_title(f"Peak at {peak.peak_center}")
         ax.set_xlabel("Sample")
         ax.set_ylabel("Value")
-        plt.plot(val, peak.peak[val], 'rx')
+        ax.plot(val, peak.peak[val], 'rx')
     
     fig_manager.display(plot)
 
 def display_selected_range(fig_manager, qsbc_for_k, valStart, valEnd):
     def plot(ax):
+        ax.set_xlim(0, len(qsbc_for_k) + 10)
         ax.plot(qsbc_for_k, label='QSBC')
         ax.set_xlabel('Bearing Capacity')
         ax.set_ylabel('Depth')
         ax.set_title('Depth x Bearing Capacity')
         ax.legend(loc='upper right')
-        plt.plot(valStart, qsbc_for_k[valStart], 'rx')
-        plt.plot(valEnd, qsbc_for_k[valEnd], 'rx')
+        ax.plot(valStart, qsbc_for_k[valStart], 'rx')
+        ax.plot(valEnd, qsbc_for_k[valEnd], 'rx')
     fig_manager.display(plot)

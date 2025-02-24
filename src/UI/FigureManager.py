@@ -16,6 +16,7 @@ class FigureManager:
         self.is_ready = False
         self.start = None
         self.end = None
+        self.ax2 = None # A second axis that can be used if two plots need different y-axis
 
     def clear(self):
         """Clears the current axes and resets the figure."""
@@ -24,6 +25,10 @@ class FigureManager:
                 sub_ax.clear()
         else:
             self.ax.clear()
+
+        if self.ax2 != None:
+            self.ax2.clear()
+            self.ax2 = None
 
         for button in self.buttons:
             button.ax.remove()  # Remove buttons from the figure
@@ -42,6 +47,10 @@ class FigureManager:
             self.fig.clear()
             self.ax = self.fig.subplots(nrows=nrows, ncols=ncols, squeeze=False)
             self.ax = self.ax.flatten()  # Flatten for easy indexing
+
+            # if the display function is only expecting one axis we need to convert the array of axis into just the array
+            if nrows * ncols == 1:
+                self.ax = self.ax[0]
         else:
             self.clear()  # Clear existing content for reuse
 
@@ -50,6 +59,40 @@ class FigureManager:
         plt.subplots_adjust(bottom=0.1)
 
         self.fig.tight_layout(rect=[0, 0.1,1,1])
+        self.fig.canvas.draw_idle()
+        plt.show(block=False)
+
+    def display_share_y(self, plot_function, nrows=1, ncols=1, *args, **kwargs):
+        """
+        Displays the plot with subplots if specified.
+
+        Parameters
+        ----------
+        plot_function: callable
+            A function that takes axes and any additional arguments.
+        nrows: int
+            Number of rows of subplots.
+        ncols: int
+            Number of columns of subplots.
+        """
+        # Update layout only if it changes
+        if nrows * ncols != (len(self.ax) if isinstance(self.ax, np.ndarray) else 1):
+            # Clear existing figure content
+            self.fig.clear()
+
+            # Create new subplots with the specified layout
+            self.ax = self.fig.subplots(nrows=nrows, ncols=ncols, squeeze=False)
+            self.ax = self.ax.flatten()  # Flatten for easy indexing
+
+            # if the display function is only expecting one axis we need to convert the array of axis into just the array
+            if nrows * ncols == 1:
+                self.ax = self.ax[0]
+        else:
+            self.clear()  # Clear existing content for reuse
+
+        self.ax2 = plot_function(self.ax, *args, **kwargs)
+
+        self.fig.tight_layout()
         self.fig.canvas.draw_idle()
         plt.show(block=False)
 
