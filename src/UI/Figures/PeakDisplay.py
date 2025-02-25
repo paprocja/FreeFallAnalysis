@@ -37,7 +37,7 @@ def display_decel_vel_dep(figure_manager, depth, decelleration, velocity):
     figure_manager.display(plot)
     figure_manager.add_text_box("Enter Correction Type: ", [0.15, 0.01, 0.1, 0.05], 'correction')
     figure_manager.add_button("Confirm", [0.26, 0.01, 0.1, 0.05])
-    figure_manager.add_info_text()
+    figure_manager.add_info_text("1 for Log, 2 for Asinh, 3 for Beta", 0.02, 0.07, 0.34)
     input_values = figure_manager.wait_for_valid_inputs()
     return int(input_values["Enter Correction Type: "])
 
@@ -69,7 +69,7 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k):
     # TODO return the start and end values
 
 def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
-                            depth, velocity, decelleration, qdyn, start, end):
+                            depth, velocity, decelleration, qdyn, start, end, tilt_x, tilt_y):
     """
     Displays the corrected quasi static bearing capacity
     """
@@ -108,6 +108,7 @@ def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val
         ax[1].legend(loc='upper right')
 
     fig_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
+    fig_manager.add_info_text(f"Tilt x:  {tilt_x}, Tilt y: {tilt_y}", 0.25, 0.05, 0.50)
 
 
 #Have each field represent a portion of display to allow this to be re-used for each graph

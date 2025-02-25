@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Button, TextBox
+from matplotlib.widgets import Button, TextBox, RadioButtons
 import numpy as np  # numpy needed to support the change from single ax to multiple
 import time
 from .Validator import Validator  # Import the Validator class
@@ -8,6 +8,8 @@ class FigureManager:
     def __init__(self, figsize=(12, 6)):
         self.fig, self.ax = plt.subplots(figsize=figsize)  # Create the figure and axes once
         self.buttons = []  # Store references to dynamically created buttons
+        self.radio_buttons = []
+        self.radio_result = False
         self.text_boxes = {}
         self.text_values = {}
         self.validation_types = {}
@@ -17,6 +19,7 @@ class FigureManager:
         self.start = None
         self.end = None
         self.ax2 = None # A second axis that can be used if two plots need different y-axis
+        
 
     def clear(self):
         """Clears the current axes and resets the figure."""
@@ -32,7 +35,11 @@ class FigureManager:
 
         for button in self.buttons:
             button.ax.remove()  # Remove buttons from the figure
-        self.buttons.clear()
+        self.buttons = []
+
+        for radio in self.radio_buttons:
+            radio.ax.remove()
+        self.radio_buttons = []
 
         for label, text_box in self.text_boxes.items():  # Iterate directly over the dictionary
             text_box.ax.remove()  # Correctly access text_box
@@ -40,10 +47,12 @@ class FigureManager:
         self.text_values.clear()
         self.validation_types.clear()
         self.valid_inputs.clear()
+        self.radio_result = False
 
     def display(self, plot_function, nrows=1, ncols=1, *args, **kwargs):
         """Displays the plot with subplots if specified."""
         if nrows * ncols != (len(self.ax) if isinstance(self.ax, np.ndarray) else 1):
+            self.clear()
             self.fig.clear()
             self.ax = self.fig.subplots(nrows=nrows, ncols=ncols, squeeze=False)
             self.ax = self.ax.flatten()  # Flatten for easy indexing
@@ -53,6 +62,8 @@ class FigureManager:
                 self.ax = self.ax[0]
         else:
             self.clear()  # Clear existing content for reuse
+
+        self.remove_info_text()
 
         plot_function(self.ax, *args, **kwargs)
 
@@ -91,8 +102,10 @@ class FigureManager:
             self.clear()  # Clear existing content for reuse
 
         self.ax2 = plot_function(self.ax, *args, **kwargs)
-
-        self.fig.tight_layout()
+        
+        plt.subplots_adjust(bottom=0.1)
+    
+        self.fig.tight_layout(rect=[0, 0.1,1,1])
         self.fig.canvas.draw_idle()
         plt.show(block=False)
 
@@ -154,24 +167,42 @@ class FigureManager:
                 self.valid_inputs[label] = False
                 self.add_invalid_text()
 
+    def add_radio(self, position):
+        rax = self.fig.add_axes(position, facecolor='lightgrey')
+
+        radio = RadioButtons(rax, ('Yes', 'No'))
+
+        #set the active at the start be 'No'
+        radio.set_active(1)
+
+        radio.on_clicked(self.yes_no_from_radio)
+        self.radio_buttons.append(radio)
+
+    def yes_no_from_radio(self, label):
+        if label == 'Yes':
+            self.radio_result = True
+        else:
+            self.radio_result = False
+            
+
   
     def wait_for_valid_inputs(self):
         """Waits until all text boxes contain valid values."""
         while not self.is_ready:
             plt.pause(0.1)
         self.is_ready = False
-        self.remove_info_text()
+        
         return self.text_values  # Return valid inputs
     
-    def add_info_text(self):
+    def add_info_text(self, text, x_off, y_off, width):
         if hasattr(self, 'info_ax'):
             self.info_ax.remove()
-        self.info_ax = self.fig.add_axes([0.02, 0.07, 0.34, 0.05], facecolor='lightgrey')
+        self.info_ax = self.fig.add_axes([x_off, y_off, width, 0.05], facecolor='lightgrey')
         self.info_ax.set_xticks([])
         self.info_ax.set_yticks([])
-        self.info_text = self.info_ax.text(0.5, 0.5, "1 for Log, 2 for Asinh, 3 for Beta", 
+        self.info_text = self.info_ax.text(0.5, 0.5, text, 
                                            ha='center', va='center',
-                                           color='black', fontsize=12, fontweight='bold')
+                                           color='black', fontsize=12)
         
     def remove_info_text(self):
         if hasattr(self, 'info_ax'):
