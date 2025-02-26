@@ -18,6 +18,10 @@ class FigureManager:
         self.is_ready = False
         self.start = None
         self.end = None
+        self.p_start = None
+        self.p_end = None
+        self.p_inc = None
+        self.p_dec = None
         self.ax2 = None # A second axis that can be used if two plots need different y-axis
         
 
@@ -48,6 +52,7 @@ class FigureManager:
         self.validation_types.clear()
         self.valid_inputs.clear()
         self.radio_result = False
+        self.remove_info_text()
 
     def display(self, plot_function, nrows=1, ncols=1, *args, **kwargs):
         """Displays the plot with subplots if specified."""
@@ -63,7 +68,7 @@ class FigureManager:
         else:
             self.clear()  # Clear existing content for reuse
 
-        self.remove_info_text()
+        
 
         plot_function(self.ax, *args, **kwargs)
 
@@ -89,12 +94,11 @@ class FigureManager:
         # Update layout only if it changes
         if nrows * ncols != (len(self.ax) if isinstance(self.ax, np.ndarray) else 1):
             # Clear existing figure content
+            self.clear()
             self.fig.clear()
-
             # Create new subplots with the specified layout
             self.ax = self.fig.subplots(nrows=nrows, ncols=ncols, squeeze=False)
             self.ax = self.ax.flatten()  # Flatten for easy indexing
-
             # if the display function is only expecting one axis we need to convert the array of axis into just the array
             if nrows * ncols == 1:
                 self.ax = self.ax[0]
@@ -116,15 +120,23 @@ class FigureManager:
         button.on_clicked(self.on_submit)
         self.buttons.append(button)
 
-    def on_submit(self, event):
+    def continue_next(self, event):
+        self.is_ready = True
+
+    def on_submit(self,  event):
         if all(self.valid_inputs.values()):
             self.is_ready = True
 
-    def add_text_box(self, label, position, validation_type):
+    def add_text_box(self, label, position, validation_type, pen_data=None, pressure=None):
         """ Adds a text box and sets up validation. """
         ax_box = self.fig.add_axes(position)
         text_box = TextBox(ax_box, label)
         
+        if pen_data is not None:
+            self.validator.set_penetrometer_data(pen_data)
+        if pressure is not None:
+            self.validator.set_pore_pressure(pressure)
+
         # Explicitly use self.validator and bind the method is_valid_peak
         text_box.on_submit(lambda text: self.store_text(label, self.validator, text))
         
@@ -153,6 +165,46 @@ class FigureManager:
                 self.valid_inputs[label] = True
                 self.valid_inputs["Enter End Time: "] = True
                 self.start = text
+                self.remove_invalid_text()
+            else:
+                self.valid_inputs[label] = False
+                self.add_invalid_text()
+        elif validator.type == 'p_end':
+            self.p_end = text
+            if validator.validate(self.p_start, text):  # Apply the validation rule using the validator instance
+                self.valid_inputs[label] = True
+                self.valid_inputs["Enter Pressure Start: "] = True
+                self.p_end = text
+                self.remove_invalid_text()
+            else:
+                self.valid_inputs[label] = False
+                self.add_invalid_text()
+        elif validator.type == 'p_start':
+            self.p_start = text
+            if validator.validate(text, self.p_end):  # Apply the validation rule using the validator instance
+                self.valid_inputs[label] = True
+                self.valid_inputs["Enter Pressure End: "] = True
+                self.p_start = text
+                self.remove_invalid_text()
+            else:
+                self.valid_inputs[label] = False
+                self.add_invalid_text()
+        elif validator.type == 'p_dec':
+            self.p_dec = text
+            if validator.validate(self.p_inc, text):  # Apply the validation rule using the validator instance
+                self.valid_inputs[label] = True
+                self.valid_inputs["Enter Profile Increase: "] = True
+                self.p_dec = text
+                self.remove_invalid_text()
+            else:
+                self.valid_inputs[label] = False
+                self.add_invalid_text()
+        elif validator.type == 'p_inc':
+            self.p_inc = text
+            if validator.validate(text, self.p_dec):  # Apply the validation rule using the validator instance
+                self.valid_inputs[label] = True
+                self.valid_inputs["Enter Profile Decrease: "] = True
+                self.p_inc = text
                 self.remove_invalid_text()
             else:
                 self.valid_inputs[label] = False

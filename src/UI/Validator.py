@@ -2,11 +2,18 @@ class Validator:
     def __init__(self):
         self.num_peaks = None  # Default value for num_peaks
         self.type = None
+        self.penetrometer_data = None
+        self.pore_pressure = None
         
         
     def set_type(self, type):
         self.type = type
 
+    def set_penetrometer_data(self, data):
+        self.penetrometer_data = data
+
+    def set_pore_pressure(self, data):
+        self.pore_pressure = data
 
     def validate(self, data, data2=None):
         if self.type == 'peak':
@@ -15,13 +22,34 @@ class Validator:
             return self.is_valid_spike(data)
         elif self.type == 'correction':
             return self.is_valid_correction_type(data)
-        elif self.type == 'start':
+        elif self.type == 'start' or self.type == 'end':
             return self.is_valid_start_and_end(data, data2)
-        elif self.type == 'end':
-            return self.is_valid_start_and_end(data, data2)
+        elif self.type == 'p_start' or self.type == 'p_end':
+            return self.is_valid_p_start_and_end(data, data2)
+        elif self.type == 'p_inc' or self.type == 'p_dec':
+            return self.is_valid_p_inc_and_dec(data, data2)
         else:
             return False
         
+    def is_valid_p_inc_and_dec(self, inc, dec):
+        if inc == "" or inc is None:
+            return False
+        if dec == "" or dec is None:
+            return False
+        if int(inc) >= 0 and int(inc) < int(dec) and int(dec) <= self.pore_pressure.pressure_end:
+            return True
+        else:
+            return False
+        
+    def is_valid_p_start_and_end(self, start, end):
+        if start == "" or start is None:
+            return False
+        if end == "" or end is None:
+            return False
+        if int(start) >= 0 and int(start) < int(end) and int(end) <= len(self.penetrometer_data.g50g):
+            return True
+        else:
+            return False
 
     def is_valid_start_and_end(self, start, end):
         if start == "" or start is None:

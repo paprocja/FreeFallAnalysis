@@ -68,8 +68,8 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k):
 
     # TODO return the start and end values
 
-def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
-                            depth, velocity, decelleration, qdyn, start, end, tilt_x, tilt_y):
+def display_corrected_QSBC(figure_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
+                            depth, velocity, decelleration, qdyn, start, end, tilt_x, tilt_y, do_pore):
     """
     Displays the corrected quasi static bearing capacity
     """
@@ -107,12 +107,23 @@ def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val
         ax[1].set_title('QSBC corrections & Q_dynamic')
         ax[1].legend(loc='upper right')
 
-    fig_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
-    fig_manager.add_info_text(f"Tilt x:  {tilt_x}, Tilt y: {tilt_y}", 0.25, 0.05, 0.50)
+    figure_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
+    figure_manager.add_info_text(f"Tilt x:  {tilt_x}, Tilt y: {tilt_y}", 0.25, 0.05, 0.50)
 
+    figure_manager.add_button("Continue?", [0.76, 0.05, 0.1, 0.05])
+    
+    if not do_pore:
+        figure_manager.add_radio([0.86, 0.02, 0.05, 0.08])
+        figure_manager.wait_for_valid_inputs()
+        return figure_manager.radio_result
+    else:
+        figure_manager.wait_for_valid_inputs()
+        return None
+    # figure_manager.add_info_text("Resart?", 0.76, 0.00, 0.1)
+    
 
 #Have each field represent a portion of display to allow this to be re-used for each graph
-def display_selected_peak(fig_manager, val, peak):
+def display_selected_peak(figure_manager, val, peak):
     """
     Displays the peak using the figure manager.
     """
@@ -127,9 +138,9 @@ def display_selected_peak(fig_manager, val, peak):
         ax.set_ylabel("Value")
         ax.plot(val, peak.peak[val], 'rx')
     
-    fig_manager.display(plot)
+    figure_manager.display(plot)
 
-def display_selected_range(fig_manager, qsbc_for_k, valStart, valEnd):
+def display_selected_range(figure_manager, qsbc_for_k, valStart, valEnd):
     def plot(ax):
         ax.set_xlim(0, len(qsbc_for_k) + 10)
         ax.plot(qsbc_for_k, label='QSBC')
@@ -139,4 +150,4 @@ def display_selected_range(fig_manager, qsbc_for_k, valStart, valEnd):
         ax.legend(loc='upper right')
         ax.plot(valStart, qsbc_for_k[valStart], 'rx')
         ax.plot(valEnd, qsbc_for_k[valEnd], 'rx')
-    fig_manager.display(plot)
+    figure_manager.display(plot)
