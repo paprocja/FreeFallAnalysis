@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import os
+from Data.SoilParameterization import SoilParameterization
 import UI.FileSelectUI as FileSelectUI
 import Utils.io_utils as io
 from UI.Figures.PeakDisplay import *
@@ -283,7 +284,7 @@ def main():
         # Once peak is selected, prompt user to select a spike within the peak
         spike = select_spike(fig_manager, peak)
         peak.integrate_spike(spike)
-
+        soil_parameterization = SoilParameterization(peak)
         display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity)
 
         # Get input for type of correction log, asinh, or beta

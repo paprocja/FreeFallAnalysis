@@ -144,9 +144,9 @@ class PenetrometerData:
         Returns
         -------
         """
-        peaks, heights = find_peaks(self.g250g, height=5, distance=2000)
+        peaks, heights = find_peaks(self.g250g, prominence=3)
         if len(peaks) > 0:
-            self.heights = heights['peak_heights']
+            self.heights = heights['prominences']
             self.peaks = peaks
             self.number_peaks = len(peaks)
     
