@@ -35,6 +35,13 @@ def display_peaks_and_ppm(figure_manager, penetrometer_data, pressure_start=0, p
         return ax2
 
     figure_manager.display_share_y(plot)
+    figure_manager.add_text_box("Enter Pressure Start: ", [0.15, 0.07, 0.1, 0.05], 'p_start', pen_data=penetrometer_data)
+    figure_manager.add_text_box("Enter Pressure End: ", [0.15, 0.01, 0.1, 0.05], 'p_end', pen_data=penetrometer_data)
+    figure_manager.add_button("Confirm", [0.26, 0.03, 0.1, 0.05])
+    input_values = figure_manager.wait_for_valid_inputs()
+    p_start = int(input_values["Enter Pressure Start: "])
+    p_end = int(input_values["Enter Pressure End: "])
+    return p_start, p_end
 
 def display_deceleration_profile(figure_manager, pore_pressure: PorePressure, start=0, end=0, display_range=False):
     def plot(ax):
@@ -47,6 +54,14 @@ def display_deceleration_profile(figure_manager, pore_pressure: PorePressure, st
             ax.plot(end, pore_pressure.deceleration_profile[end], 'rx')
 
     figure_manager.display(plot)
+    figure_manager.display_share_y(plot)
+    figure_manager.add_text_box("Enter Profile Increase: ", [0.15, 0.07, 0.1, 0.05], 'p_inc', pressure=pore_pressure)
+    figure_manager.add_text_box("Enter Profile Decrease: ", [0.15, 0.01, 0.1, 0.05], 'p_dec', pressure=pore_pressure)
+    figure_manager.add_button("Confirm", [0.26, 0.03, 0.1, 0.05])
+    input_values = figure_manager.wait_for_valid_inputs()
+    p_inc = int(input_values["Enter Profile Increase: "])
+    p_dec = int(input_values["Enter Profile Decrease: "])
+    return p_inc, p_dec
 
 def display_pore_pressure(figure_manager, pore_pressure: PorePressure):
     def plot(ax):
@@ -82,6 +97,8 @@ def display_pore_pressure(figure_manager, pore_pressure: PorePressure):
 
 
     figure_manager.display(plot)
-
-
+    figure_manager.add_button("Continue?", [0.76, 0.05, 0.1, 0.05])
+    figure_manager.add_radio([0.86, 0.02, 0.05, 0.08])
+    figure_manager.wait_for_valid_inputs()
+    return figure_manager.radio_result
 
