@@ -38,8 +38,10 @@ def display_decel_vel_dep(figure_manager, depth, decelleration, velocity):
     figure_manager.add_text_box("Enter Correction Type: ", [0.15, 0.01, 0.1, 0.05], 'correction')
     figure_manager.add_button("Confirm", [0.26, 0.01, 0.1, 0.05])
     figure_manager.add_info_text("1 for Log, 2 for Asinh, 3 for Beta", 0.02, 0.07, 0.34)
+    figure_manager.add_radio([0.85, 0.02, 0.05, 0.08])
+    figure_manager.add_info_text("In water?", 0.72, 0.03, 0.12)
     input_values = figure_manager.wait_for_valid_inputs()
-    return int(input_values["Enter Correction Type: "])
+    return int(input_values["Enter Correction Type: "]), figure_manager.radio_result
 
 def display_QSBC_for_K(figure_manager, qsbc_for_k):
     """

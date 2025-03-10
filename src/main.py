@@ -92,18 +92,17 @@ def main():
         spike = display_peak(fig_manager, peak.peak, peak.g2g, peak.end_of_drop, peak.peak_center) 
         peak.integrate_spike(spike)
 
-
         soil_parameterization = SoilParameterization(peak)
 
         # Get input for type of correction log, asinh, or beta
         # Once spike is selected, prompt user to select a QSBC correction equation
-        correction_type = display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity)
+        correction_type, in_water = display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity)
 
         # TODO prompt user for correction factor and tip_type
         correction_factor = 1.5
         tip_type = 'c'
 
-        initial_qsbc = peak.calculate_QSBC_for_K(correction_type, correction_factor, tip_type)
+        initial_qsbc = peak.calculate_QSBC_for_K(correction_type, correction_factor, tip_type, in_water)
 
         # Will also need to pass in the tip type when not using default to c
         
@@ -123,7 +122,6 @@ def main():
         # Determine if this is the first peak and if the user would like to calculate pore pressure for that peak
         if do_calculate_pore_pressure:
             
-
             # Get the bounds of the pore pressure for the first peak
             pore_pressure_start, pore_pressure_end = display_peaks_and_ppm(fig_manager, penetrometer_data)
 

@@ -60,7 +60,7 @@ class Peak:
         self.area = None
         self.initial_qsbc_for_K = None
 
-    def calculate_QSBC_for_K(self, correction_type, correction_factor, tip_type):
+    def calculate_QSBC_for_K(self, correction_type, correction_factor, tip_type, in_water=False):
             """
             Calculates standardized quasi static bearing capacity based on type, factor, and tip.
 
@@ -72,13 +72,21 @@ class Peak:
                 either the k or beta value to be used in calculation
             tip_type: char
                 the type of tip the penetrometer has
+            in_water: bool
+                indicates if the drop was perfomed in water or in air
 
             Return
             ------
             numpy array
                 the corrected qsbc for a given correction type, factor, and tip
             """
+            BUOYANCY = 1020*0.002473
+
             mass, _ = self._get_mass_length(tip_type)
+
+            # If the drop was performed in water the mass needs to be adjusted due to buoyancy
+            if in_water:  
+                mass = mass - BUOYANCY
 
             # Take off the last value because it is 0 and we cannot take log of 0
             corrected_velocity = self.velocity[:-1] / 0.02
