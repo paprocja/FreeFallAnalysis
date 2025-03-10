@@ -109,7 +109,7 @@ def main():
         # Tuple used to find start and end values. Could be changed so parameters are not needed for average calculation
         start, end = display_QSBC_for_K(fig_manager, initial_qsbc)
         
-        line1val1, line1val2, line1ave, line2val1, line2val2, line2ave = peak.calculate_corrected_qsbc(correction_type, start, end)
+        line1val1, line1val2, line1ave, line2val1, line2val2, line2ave = peak.calculate_corrected_qsbc(correction_type, start, end, in_water)
 
          # Get the tilt in the x and y directions
         tilt_x, tilt_y = calculate_tilt(spike, peak.end_of_drop, peak.gX55g, peak.gY55g)
