@@ -171,6 +171,65 @@ class FigureManager:
         self.validation_types[label] = validation_type  # Store validation function
         self.valid_inputs[label] = False  # Mark as not valid initially
 
+    
+    def find_label_partner(self, label):
+        """
+        FInds the corresponding partner label for a given label,
+             if their is a pair of them
+        
+        Paramters
+        ---------
+        label: string
+            The label that we want to use to find the other paired label
+
+        Return: the other label
+        """
+        pair_mapping = {
+        'Enter Start Time: ': 'Enter End Time: ',
+        'Enter End Time: ': 'Enter Start Time: ',
+        'Enter Pressure Start: ': 'Enter Pressure End: ',
+        'Enter Pressure End: ': 'Enter Pressure Start: ',
+        'Enter Profile Increase: ': 'Enter Profile Decrease: ',
+        'Enter Profile Decrease: ': 'Enter Profile Increase: '
+        }
+        return pair_mapping.get(label, "")
+
+    def validate_input(self, label, text):
+        """
+        Validates the input based on the type and updates the 
+            corresponding start or end vale
+
+        Parameters
+        ----------
+        label: string
+            The name of the textbox being run
+        text: string
+            The info currently in the textbox
+        """
+        self.text_values[label] = text
+        validator_type = self.validation_types[label]
+        self.validator.set_type(validator_type)
+
+        if validator_type in ['start', 'end', 'p_start', 'p_end', 'p_inc', 'p_dec']:
+            paired_label = self.find_label_partner(label)
+            paired_text = self.text_values.get(paired_label, "")
+
+            if validator_type in ['start', 'p_start', 'p_inc']:
+                is_valid = self.validator.validate(text, paired_text)
+            else:
+                is_valid = self.validator.validate(paired_text, text)
+
+            self.valid_inputs[label] = is_valid
+            self.valid_inputs[paired_label] = is_valid
+            return is_valid
+        else:
+            if self.validator.validate(text):
+                self.valid_inputs[label] = True
+                return True
+            else:
+                self.valid_inputs[label] = False
+                return False
+    
     def store_text(self, label, validator, text):
         """ 
         Stores input, validates it, and updates status. 
@@ -186,77 +245,13 @@ class FigureManager:
         
         """
         self.text_values[label] = text
-        validator.set_type(self.validation_types[label])
-        # Apply the validation rule using the validator instance. 
-        #   Special cases for anything with multiple inputs.
-        if validator.type == 'end':
-            self.end = text
-            if validator.validate(self.start, text):  
-                self.valid_inputs[label] = True
-                self.valid_inputs["Enter Start Time: "] = True
-                self.end = text
-                self.remove_invalid_text()
-            else:
-                self.valid_inputs[label] = False
-                self.add_invalid_text()
-        elif validator.type == 'start':
-            self.start = text
-            if validator.validate(text, self.end):
-                self.valid_inputs[label] = True
-                self.valid_inputs["Enter End Time: "] = True
-                self.start = text
-                self.remove_invalid_text()
-            else:
-                self.valid_inputs[label] = False
-                self.add_invalid_text()
-        elif validator.type == 'p_end':
-            self.p_end = text
-            if validator.validate(self.p_start, text):
-                self.valid_inputs[label] = True
-                self.valid_inputs["Enter Pressure Start: "] = True
-                self.p_end = text
-                self.remove_invalid_text()
-            else:
-                self.valid_inputs[label] = False
-                self.add_invalid_text()
-        elif validator.type == 'p_start':
-            self.p_start = text
-            if validator.validate(text, self.p_end):
-                self.valid_inputs[label] = True
-                self.valid_inputs["Enter Pressure End: "] = True
-                self.p_start = text
-                self.remove_invalid_text()
-            else:
-                self.valid_inputs[label] = False
-                self.add_invalid_text()
-        elif validator.type == 'p_dec':
-            self.p_dec = text
-            if validator.validate(self.p_inc, text):
-                self.valid_inputs[label] = True
-                self.valid_inputs["Enter Profile Increase: "] = True
-                self.p_dec = text
-                self.remove_invalid_text()
-            else:
-                self.valid_inputs[label] = False
-                self.add_invalid_text()
-        elif validator.type == 'p_inc':
-            self.p_inc = text
-            if validator.validate(text, self.p_dec): 
-                self.valid_inputs[label] = True
-                self.valid_inputs["Enter Profile Decrease: "] = True
-                self.p_inc = text
-                self.remove_invalid_text()
-            else:
-                self.valid_inputs[label] = False
-                self.add_invalid_text()
-        else:
-            if validator.validate(text):  
-                self.valid_inputs[label] = True
-                self.remove_invalid_text()
-            
-            else:
-                self.valid_inputs[label] = False
-                self.add_invalid_text()
+        if self.validate_input(label, text):
+            # self.valid_inputs[label] = True
+            self.remove_invalid_text()
+        else: 
+            # self.valid_inputs[label] = False
+            self.add_invalid_text()
+
 
     def add_radio(self, position):
         """
