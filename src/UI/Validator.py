@@ -59,7 +59,7 @@ class Validator:
             return False
         if end == "" or end is None:
             return False
-        if int(start) >= 0 and int(start) < int(end) and int(end) <= self.time_range:
+        if int(start) >= 0 and int(start) < int(end) and int(end) <= len(self.time_range):
             return True
         else:
             return False
