@@ -17,7 +17,7 @@ to install the necessary python packages:
 ```
 python3 -m pip install tk
 python3 -m pip install numpy
-python3 -m pip install matplotlib
+python3 -m pip install matplotlib==3.9.2
 ```
 
 ## Running the program

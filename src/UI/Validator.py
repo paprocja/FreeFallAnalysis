@@ -25,7 +25,7 @@ class Validator:
             return self.is_valid_spike(data)
         elif self.type == 'correction':
             return self.is_valid_correction_type(data)
-        elif self.type == 'start' or self.type == 'end':
+        elif self.type == 't_start' or self.type == 't_end':
             return self.is_valid_start_and_end(data, data2)
         elif self.type == 'p_start' or self.type == 'p_end':
             return self.is_valid_p_start_and_end(data, data2)

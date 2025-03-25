@@ -174,7 +174,7 @@ class FigureManager:
     
     def find_label_partner(self, label):
         """
-        FInds the corresponding partner label for a given label,
+        Finds the corresponding partner label for a given label,
              if their is a pair of them
         
         Paramters
@@ -212,30 +212,30 @@ class FigureManager:
         validator_type = self.validation_types[label]
         self.validator.set_type(validator_type)
 
-        if validator_type in ['start', 'end', 'p_start', 'p_end', 'p_inc', 'p_dec']:
+        if validator_type in ['t_start', 't_end', 'p_start', 'p_end', 'p_inc', 'p_dec']:
             # Grab the label that is paired to this input type and get the stored input from that label
             paired_label = self.find_label_partner(label)
             paired_text = self.text_values.get(paired_label, "")
 
             # Send the data points to the validator
-            if validator_type in ['start', 'p_start', 'p_inc']:
+            if validator_type in ['t_start', 'p_start', 'p_inc']:
                 is_valid = self.validator.validate(text, paired_text)
             else:
                 is_valid = self.validator.validate(paired_text, text)
 
             # If the data was validated plot the points and annotate them on the figure
-            if is_valid and validator_type in ['start', 'end']:
+            if is_valid and validator_type in ['t_start', 't_end']:
                     self.remove_points()
-                    self.plot_point(self.text_values[label], self.validator.time_range[int(self.text_values[label])])
-                    self.plot_point(self.text_values[paired_label], self.validator.time_range[int(self.text_values[paired_label])])
+                    self.plot_point(text, self.validator.time_range[int(text)])
+                    self.plot_point(paired_text, self.validator.time_range[int(paired_text)])
             elif is_valid and validator_type in ['p_start', 'p_end']:
                     self.remove_points()
-                    self.plot_point(self.text_values[label], self.validator.penetrometer_data.ppm[int(self.text_values[label])])
-                    self.plot_point(self.text_values[paired_label], self.validator.penetrometer_data.ppm[int(self.text_values[paired_label])])
+                    self.plot_point(text, self.validator.penetrometer_data.ppm[int(text)])
+                    self.plot_point(paired_text, self.validator.penetrometer_data.ppm[int(paired_text)])
             elif is_valid and validator_type in ['p_inc', 'p_dec']:
                     self.remove_points()
-                    self.plot_point(self.text_values[label], self.validator.pore_pressure.deceleration_profile[int(self.text_values[label])])
-                    self.plot_point(self.text_values[paired_label], self.validator.pore_pressure.deceleration_profile[int(self.text_values[paired_label])])
+                    self.plot_point(text, self.validator.pore_pressure.deceleration_profile[int(text)])
+                    self.plot_point(paired_text, self.validator.pore_pressure.deceleration_profile[int(paired_text)])
 
             # Set if the input was valid for the two input values from the ranges
             self.valid_inputs[label] = is_valid

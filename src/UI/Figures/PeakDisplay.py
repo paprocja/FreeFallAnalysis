@@ -59,8 +59,8 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k):
     figure_manager.display(plot)
 
     # for input colection
-    figure_manager.add_text_box("Enter Start Time: ", [0.15, 0.07, 0.1, 0.05], 'start', time_range=qsbc_for_k)
-    figure_manager.add_text_box("Enter End Time: ", [0.15, 0.01, 0.1, 0.05], 'end', time_range=qsbc_for_k)
+    figure_manager.add_text_box("Enter Start Time: ", [0.15, 0.07, 0.1, 0.05], 't_start', time_range=qsbc_for_k)
+    figure_manager.add_text_box("Enter End Time: ", [0.15, 0.01, 0.1, 0.05], 't_end', time_range=qsbc_for_k)
     figure_manager.add_button("Confirm", [0.26, 0.03, 0.1, 0.05])
     input_values = figure_manager.wait_for_valid_inputs()
     start = int(input_values["Enter Start Time: "])
