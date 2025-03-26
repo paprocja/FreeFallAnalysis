@@ -1,15 +1,16 @@
 #!/usr/bin/python3
 import sys
 import os
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
 from verify import *
 from Data.SoilParameterization import SoilParameterization
 from Data.PenetrometerData import PenetrometerData
 from Data.TiltCalculator import calculate_tilt
 from Data.Peak import Peak
 from Data.PorePressure import PorePressure
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 penetrometer_data = PenetrometerData(['TestData/bLogtest.bin'], 8)
 
