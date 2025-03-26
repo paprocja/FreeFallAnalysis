@@ -108,7 +108,7 @@ def display_corrected_QSBC(figure_manager, line1val1, line1val2, line1ave, line2
         ax[1].legend(loc='upper right')
 
     figure_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
-    figure_manager.add_info_text(f"Tilt x:  {tilt_x}, Tilt y: {tilt_y}", 0.25, 0.05, 0.50)
+    figure_manager.add_info_text(f"Tilt x:  {tilt_x:.6f}, Tilt y: {tilt_y:.6f}", 0.25, 0.05, 0.50)
 
     figure_manager.add_button("Continue?", [0.76, 0.05, 0.1, 0.05])
     
