@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.signal import find_peaks
 from Utils.binary_utils import stitch_files, load_penetrometer_data
+import os
+import json
 
 class PenetrometerData:
     def __init__(self, file_paths, bdid=8):
@@ -62,7 +64,7 @@ class PenetrometerData:
         self.ppm 
         """
         match bdid:
-            case 1:
+            case '1':
                 # calibration factors from July 2020
                 self.g2g = ((self.data[:, 2] - 42590.9) / 1626361.1)
                 self.g18g = ((self.data[:, 3] - 44492.9) / 161125.5)
@@ -80,7 +82,7 @@ class PenetrometerData:
                 self.g200g = np.delete(self.g200g, -1)
                 self.g200g = np.insert(self.g200g, 0, 1)
                 self.ppm *= 6.89475729  # Convert to kPa
-            case 2:
+            case '2':
                 # calibration factors from Aug 26, 2021
                 self.g2g = ((self.data[:, 2] + 37242.2) / 1639250.2)
                 self.g18g = ((self.data[:, 3] - 26867.0) / 160460.5)
@@ -92,7 +94,7 @@ class PenetrometerData:
                 self.g250g = ((self.data[:, 9] - 40614.9) / 13654.6)
                 self.ppm *= 6.89475729  # Convert to kPa
                 
-            case 3:
+            case '3':
                 # calibration factors from July 2019
                 self.g2g = ((self.data[:, 2] - 38285.6) / 1615800.9)
                 self.g18g = ((self.data[:, 3] + 13738) / 163516.8)
@@ -110,7 +112,7 @@ class PenetrometerData:
                 self.g200g = np.delete(self.g200g, -1)
                 self.g200g = np.insert(self.g200g, 0, 1)
                 self.ppm *= 6.89475729  # Convert to kPa
-            case 8:
+            case '8':
                 # calibration factors from Feb 2023
                 self.g2g = ((self.data[:, 2]) + 48961.0) / 1629804.6
                 self.g18g = ((self.data[:, 3] - 45301.2) / 160611.4)
@@ -127,6 +129,32 @@ class PenetrometerData:
                 self.g200g = np.insert(self.g200g, 0, 1)
                 self.g18g = np.insert(self.g18g, 0, 1)
 
+            
+            case 'json':
+                json_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "calibration_factors.json")
+
+                try:
+                    with open(json_file, "r") as f:
+                        calibration_data = json.load(f)
+                except FileNotFoundError:
+                    print(f"Error: Calibration file not found at {json_file}")
+                    print("Please ensure 'calibration_factors.json' is located in the 'src' directory.")
+
+                # Extract calibration constants
+                try:
+                    self.g2g = ((self.data[:, 2] + calibration_data["g2g"]["offset"]) / calibration_data["g2g"]["scale"])
+                    self.g18g = ((self.data[:, 3] + calibration_data["g18g"]["offset"]) / calibration_data["g18g"]["scale"])
+                    self.g50g = ((self.data[:, 4] + calibration_data["g50g"]["offset"]) / calibration_data["g50g"]["scale"])
+                    self.ppm = ((self.data[:, 5] + calibration_data["ppm"]["offset"]) / calibration_data["ppm"]["scale"])
+                    self.g200g = ((self.data[:, 6] + calibration_data["g200g"]["offset"]) / calibration_data["g200g"]["scale"])
+                    self.gX55g = ((self.data[:, 7] + calibration_data["gX55g"]["offset"]) / calibration_data["gX55g"]["scale"])
+                    self.gY55g = ((self.data[:, 8] + calibration_data["gY55g"]["offset"]) / calibration_data["gY55g"]["scale"])
+                    self.g250g = ((self.data[:, 9] + calibration_data["g250g"]["offset"]) / calibration_data["g250g"]["scale"])
+
+                    self.ppm *= 6.89475729  # Convert to kPa
+                
+                except KeyError as e:
+                    raise Exception(f"Missing key in JSON file: {e}")
             case _:
                 raise Exception(f'Unknown Blue Drop #{bdid}')
 
