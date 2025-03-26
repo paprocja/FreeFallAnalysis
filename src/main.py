@@ -42,7 +42,7 @@ def save_to_csv():
     """
     # Allows main to be executed from ui-ffp or ui-ffp/src folders
     # TODO make it so main can be executed anywhere on the system for packaging
-    penetrometer_data.save_data('saved_data/' + 'raw_data_' + datetime.now().strftime("%Y-%m-%d_%H%M%S") + '.csv')
+    penetrometer_data.save_data('../saved_data/' + 'raw_data_' + datetime.now().strftime("%Y-%m-%d_%H%M%S") + '.csv')
 
 def restart() -> bool:
     """
@@ -80,10 +80,8 @@ def main():
     while running:
         #display the initial plot through the figure manager
         peak_number, do_calculate_pore_pressure = display_initial_data(fig_manager, penetrometer_data.g2g, penetrometer_data.g18g, penetrometer_data.g50g, penetrometer_data.g200g, penetrometer_data.g250g,
-                                                                       penetrometer_data.peaks, penetrometer_data.heights, penetrometer_data.number_peaks, True)
+                                                                       penetrometer_data.peaks, penetrometer_data.heights, penetrometer_data.number_peaks)
         save_to_csv()
-        display_initial_data(fig_manager, penetrometer_data.g2g, penetrometer_data.g18g, penetrometer_data.g50g, penetrometer_data.g200g, penetrometer_data.g250g,
-                              penetrometer_data.peaks, penetrometer_data.heights, penetrometer_data.number_peaks)
 
         # Prompt user to select a peak
         peak = Peak(peak_num=peak_number-1, penetrometer_data=penetrometer_data)
@@ -94,11 +92,10 @@ def main():
         peak.integrate_spike(spike)
 
         soil_parameterization = SoilParameterization(peak)
-        display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity, True)
 
         # Get input for type of correction log, asinh, or beta
         # Once spike is selected, prompt user to select a QSBC correction equation
-        correction_type, in_water = display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity, TRue)
+        correction_type, in_water = display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity, True)
 
         # TODO prompt user for correction factor and tip_type
         correction_factor = 1.5
@@ -107,10 +104,9 @@ def main():
         initial_qsbc = peak.calculate_QSBC_for_K(correction_type, correction_factor, tip_type, in_water)
 
         # Will also need to pass in the tip type when not using default to c
-        display_QSBC_for_K(fig_manager, initial_qsbc, True)
         
         # Tuple used to find start and end values. Could be changed so parameters are not needed for average calculation
-        start, end = display_QSBC_for_K(fig_manager, initial_qsbc)
+        start, end = display_QSBC_for_K(fig_manager, initial_qsbc, True)
         
         line1val1, line1val2, line1ave, line2val1, line2val2, line2ave = peak.calculate_corrected_qsbc(correction_type, start, end, in_water)
 

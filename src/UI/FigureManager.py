@@ -123,24 +123,17 @@ class FigureManager:
         self.fig.canvas.draw_idle()
         plt.show(block=False)
 
-    def save_to_png(self, event):
-        #Save to fig file format
-        filename = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-        plt.savefig('saved_data/' + 'figure_' + filename + '.png')
-
-        self.ax2 = plot_function(self.ax, *args, **kwargs)
-        
-        plt.subplots_adjust(bottom=0.1)
-    
-        self.fig.tight_layout(rect=[0, 0.1,1,1])
-        self.fig.canvas.draw_idle()
-        plt.show(block=False)
-
     def add_button(self, label, position, callback=None):
         """Adds a button."""
-        ax_button = self.fig.add_axes(position)
-        button = Button(ax_button, label)
-        button.on_clicked(self.on_submit)
+        if (label != "Save as PNG"):
+            ax_button = self.fig.add_axes(position)
+            button = Button(ax_button, label)
+            button.on_clicked(self.on_submit)
+        else:
+            ax_button = self.fig.add_axes(position)
+            button = Button(ax_button, label)
+            button.on_clicked(self.save_to_png)
+
         self.buttons.append(button)
 
 
@@ -391,6 +384,9 @@ class FigureManager:
             self.invalid_ax.remove()
             del self.invalid_ax  # Clean up the reference
 
+    def save_to_png(self, event):
+        filename = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        plt.savefig('../saved_data/' + 'figure_' + filename + '.png')
 
     # def plot_point(self, x_val, y_val):
     #     x_val = int(x_val)
@@ -398,4 +394,3 @@ class FigureManager:
     #     self.ax.scatter([x_val], [y_val], color='red', s=100, marker='x')  # Mark with red cross
     #     self.ax.annotate(f'Marked at ({x_val}, {y_val})', (x_val, y_val),
     #                       textcoords="offset points", xytext=(0,10), ha='center')
-

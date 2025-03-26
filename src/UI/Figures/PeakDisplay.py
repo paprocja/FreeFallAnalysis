@@ -19,7 +19,7 @@ def display_peak(figure_manager, peak, g2g, drop_end, peak_center, save_data, fi
     if save_data:
         df = pd.DataFrame({"Peak": peak, "G2G": g2g})
         filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-        df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
+        df.to_csv('../saved_data/' + filename + '_' + filename1 + '.csv', index=False)
         
 
     figure_manager.display(plot)
@@ -47,7 +47,7 @@ def display_decel_vel_dep(figure_manager, depth, deceleration, velocity, save_da
     if save_data:
         df = pd.DataFrame({"Deceleration": deceleration, "Velocity": velocity, "Depth (M)": depth})
         filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-        df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
+        df.to_csv('../saved_data/' + filename + '_' + filename1 + '.csv', index=False)
 
     figure_manager.display(plot)
     figure_manager.add_text_box("Enter Correction Type: ", [0.15, 0.01, 0.1, 0.05], 'correction')
@@ -73,7 +73,7 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k, save_data, filename="bearing_
     if save_data:
         df = pd.DataFrame({"QSBC": qsbc_for_k})
         filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-        df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
+        df.to_csv('../saved_data/' + filename + '_' + filename1 + '.csv', index=False)
 
     figure_manager.display(plot)
 
@@ -88,7 +88,7 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k, save_data, filename="bearing_
 
 
 def display_corrected_QSBC(figure_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
-                            depth, velocity, decelleration, qdyn, start, end, tilt_x, tilt_y, do_pore, save_data, filename="corrected_qsbc"):
+                            depth, velocity, deceleration, qdyn, start, end, tilt_x, tilt_y, do_pore, save_data, filename="corrected_qsbc"):
     """
     Displays the corrected quasi static bearing capacity
     """
@@ -97,8 +97,8 @@ def display_corrected_QSBC(figure_manager, line1val1, line1val2, line1ave, line2
         #plot the decel and velocity to the left side of figure
         ax[0].invert_yaxis()
         ax[0].set_ylim(max(depth), 0)
-        ax[0].set_xlim(0, max(max(decelleration), max(velocity)))
-        ax[0].plot(decelleration, depth, linestyle='-', label='Deceleration')
+        ax[0].set_xlim(0, max(max(deceleration), max(velocity)))
+        ax[0].plot(deceleration, depth, linestyle='-', label='Deceleration')
         ax[0].plot(velocity, depth, linestyle='--', label='Velocity')
         ax[0].set_ylabel('Depth [Meters]')
         ax[0].set_xlabel('Deceleration [g] // Velocity [m/s]')
@@ -130,11 +130,12 @@ def display_corrected_QSBC(figure_manager, line1val1, line1val2, line1ave, line2
         #Save area and strain-rate correction factor
         df = pd.DataFrame({"Dynamic Bearing Capacity": qdyn[start:end+1] / 1000, "Depth(CM)": corrected_depth})
         filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-        df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
+        df.to_csv('../saved_data/' + filename + '_' + filename1 + '.csv', index=False)
 
     figure_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
 
-    figure_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
+    #TODO: Get working
+    figure_manager.add_button("Save as PNG", [0.05, 0.05, 0.1, 0.05])
     figure_manager.add_info_text(f"Tilt x:  {tilt_x}, Tilt y: {tilt_y}", 0.25, 0.05, 0.50)
 
     figure_manager.add_button("Continue?", [0.76, 0.05, 0.1, 0.05])
