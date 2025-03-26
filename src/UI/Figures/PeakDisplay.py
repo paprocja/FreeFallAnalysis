@@ -2,12 +2,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
 
-#TODO: Include area
 def display_peak(figure_manager, peak, g2g, drop_end, peak_center, save_data, filename="peak_data"):
     """
     Displays the peak using the figure manager.
     """
     def plot(ax):
+        ax.set_xlim(0, len(peak) + 10)
         ax.plot(peak, label='peak')
         ax.plot(g2g, label ='2g')
         ax.scatter(drop_end, peak[drop_end], marker='x', label='End of drop', color='black')
@@ -23,6 +23,12 @@ def display_peak(figure_manager, peak, g2g, drop_end, peak_center, save_data, fi
         
 
     figure_manager.display(plot)
+
+    figure_manager.add_text_box("Enter Spike Selection: ", [0.15, 0.05, 0.1, 0.05], 'spike')
+    figure_manager.add_button("Confirm", [0.26, 0.05, 0.1, 0.05])
+
+    input_values = figure_manager.wait_for_valid_inputs()
+    return int(input_values["Enter Spike Selection: "])
 
 def display_decel_vel_dep(figure_manager, depth, deceleration, velocity, save_data, filename="decel_vel_dep"):
     """
@@ -44,12 +50,20 @@ def display_decel_vel_dep(figure_manager, depth, deceleration, velocity, save_da
         df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
 
     figure_manager.display(plot)
+    figure_manager.add_text_box("Enter Correction Type: ", [0.15, 0.01, 0.1, 0.05], 'correction')
+    figure_manager.add_button("Confirm", [0.26, 0.01, 0.1, 0.05])
+    figure_manager.add_info_text("1 for Log, 2 for Asinh, 3 for Beta", 0.02, 0.07, 0.34)
+    figure_manager.add_radio([0.85, 0.02, 0.05, 0.08])
+    figure_manager.add_info_text("In water?", 0.72, 0.03, 0.12)
+    input_values = figure_manager.wait_for_valid_inputs()
+    return int(input_values["Enter Correction Type: "]), figure_manager.radio_result
 
 def display_QSBC_for_K(figure_manager, qsbc_for_k, save_data, filename="bearing_capacity"):
     """
     Displays the quasi static bearing capacity
     """
     def plot(ax):
+        ax.set_xlim(0, len(qsbc_for_k) + 10)
         ax.plot(qsbc_for_k, label='QSBC')
         ax.set_xlabel('Bearing Capacity')
         ax.set_ylabel('Depth')
@@ -63,20 +77,28 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k, save_data, filename="bearing_
 
     figure_manager.display(plot)
 
+    # for input colection
+    figure_manager.add_text_box("Enter Start Time: ", [0.15, 0.07, 0.1, 0.05], 'start', time_range=len(qsbc_for_k))
+    figure_manager.add_text_box("Enter End Time: ", [0.15, 0.01, 0.1, 0.05], 'end', time_range=len(qsbc_for_k))
+    figure_manager.add_button("Confirm", [0.26, 0.03, 0.1, 0.05])
+    input_values = figure_manager.wait_for_valid_inputs()
+    start = int(input_values["Enter Start Time: "])
+    end = int(input_values["Enter End Time: "])
+    return start, end
 
-def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
-                            depth, velocity, deceleration, qdyn, start, end, save_data, filename="corrected_qsbc"):
+
+def display_corrected_QSBC(figure_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
+                            depth, velocity, decelleration, qdyn, start, end, tilt_x, tilt_y, do_pore, save_data, filename="corrected_qsbc"):
     """
     Displays the corrected quasi static bearing capacity
     """
     corrected_depth = depth[start:end+1]*100
     def plot(ax):
-
         #plot the decel and velocity to the left side of figure
         ax[0].invert_yaxis()
         ax[0].set_ylim(max(depth), 0)
-        ax[0].set_xlim(0, max(max(deceleration), max(velocity)))
-        ax[0].plot(deceleration, depth, linestyle='-', label='Deceleration')
+        ax[0].set_xlim(0, max(max(decelleration), max(velocity)))
+        ax[0].plot(decelleration, depth, linestyle='-', label='Deceleration')
         ax[0].plot(velocity, depth, linestyle='--', label='Velocity')
         ax[0].set_ylabel('Depth [Meters]')
         ax[0].set_xlabel('Deceleration [g] // Velocity [m/s]')
@@ -110,15 +132,30 @@ def display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val
         filename1 = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         df.to_csv('saved_data/' + filename + '_' + filename1 + '.csv', index=False)
 
-    fig_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
+    figure_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
 
+    figure_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
+    figure_manager.add_info_text(f"Tilt x:  {tilt_x}, Tilt y: {tilt_y}", 0.25, 0.05, 0.50)
+
+    figure_manager.add_button("Continue?", [0.76, 0.05, 0.1, 0.05])
+    
+    if not do_pore:
+        figure_manager.add_radio([0.86, 0.02, 0.05, 0.08])
+        figure_manager.wait_for_valid_inputs()
+        return figure_manager.radio_result
+    else:
+        figure_manager.wait_for_valid_inputs()
+        return None
+    # figure_manager.add_info_text("Resart?", 0.76, 0.00, 0.1)
+    
 
 #Have each field represent a portion of display to allow this to be re-used for each graph
-def display_selected_peak(fig_manager, val, peak):
+def display_selected_peak(figure_manager, val, peak):
     """
     Displays the peak using the figure manager.
     """
     def plot(ax):
+        ax.set_xlim(0, len(peak.peak) + 10)
         ax.plot(peak.peak, label='peak')
         ax.plot(peak.g2g, label ='2g')
         ax.scatter(peak.end_of_drop, peak.peak[peak.end_of_drop], marker='x', label='End of drop', color='black')
@@ -126,17 +163,18 @@ def display_selected_peak(fig_manager, val, peak):
         ax.set_title(f"Peak at {peak.peak_center}")
         ax.set_xlabel("Sample")
         ax.set_ylabel("Value")
-        plt.plot(val, peak.peak[val], 'rx')
+        ax.plot(val, peak.peak[val], 'rx')
     
-    fig_manager.display(plot)
+    figure_manager.display(plot)
 
-def display_selected_range(fig_manager, qsbc_for_k, valStart, valEnd):
+def display_selected_range(figure_manager, qsbc_for_k, valStart, valEnd):
     def plot(ax):
+        ax.set_xlim(0, len(qsbc_for_k) + 10)
         ax.plot(qsbc_for_k, label='QSBC')
         ax.set_xlabel('Bearing Capacity')
         ax.set_ylabel('Depth')
         ax.set_title('Depth x Bearing Capacity')
         ax.legend(loc='upper right')
-        plt.plot(valStart, qsbc_for_k[valStart], 'rx')
-        plt.plot(valEnd, qsbc_for_k[valEnd], 'rx')
-    fig_manager.display(plot)
+        ax.plot(valStart, qsbc_for_k[valStart], 'rx')
+        ax.plot(valEnd, qsbc_for_k[valEnd], 'rx')
+    figure_manager.display(plot)

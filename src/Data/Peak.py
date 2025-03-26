@@ -34,6 +34,7 @@ class Peak:
         """
         # grabs max height of peak
         self.peak_center = penetrometer_data.peaks[peak_num]
+        self.offset = 0
         
         # determines bounds of peak to copy data from
         if self.peak_center <= 1500:
@@ -62,7 +63,7 @@ class Peak:
         self.area = None
         self.initial_qsbc_for_K = None
 
-    def calculate_QSBC_for_K(self, correction_type, correction_factor, tip_type):
+    def calculate_QSBC_for_K(self, correction_type, correction_factor, tip_type, in_water=False):
             """
             Calculates standardized quasi static bearing capacity based on type, factor, and tip.
 
@@ -74,13 +75,21 @@ class Peak:
                 either the k or beta value to be used in calculation
             tip_type: char
                 the type of tip the penetrometer has
+            in_water: bool
+                indicates if the drop was perfomed in water or in air
 
             Return
             ------
             numpy array
                 the corrected qsbc for a given correction type, factor, and tip
             """
+            BUOYANCY = 1020*0.002473
+
             mass, _ = self._get_mass_length(tip_type)
+
+            # If the drop was performed in water the mass needs to be adjusted due to buoyancy
+            if in_water:  
+                mass = mass - BUOYANCY
 
             # Take off the last value because it is 0 and we cannot take log of 0
             corrected_velocity = self.velocity[:-1] / 0.02
@@ -117,12 +126,12 @@ class Peak:
         self._calculate_area_of_meter()
 
     # TODO get the start and end k values to pass into calculate average from the user
-    def calculate_corrected_qsbc(self, correction_type, peak_start, peak_end):
+    def calculate_corrected_qsbc(self, correction_type, peak_start, peak_end, in_water):
         """
         Calculates the corrected qsbc based on defined factors
         """
-        line1val1, line1val2, line1ave = self._calculate_average_qsbc(correction_type, 1.0, 1.5, peak_start, peak_end)
-        line2val1, line2val2, line2ave = self._calculate_average_qsbc(correction_type, 0.2, 0.4, peak_start, peak_end)
+        line1val1, line1val2, line1ave = self._calculate_average_qsbc(correction_type, 1.0, 1.5, peak_start, peak_end, in_water=in_water)
+        line2val1, line2val2, line2ave = self._calculate_average_qsbc(correction_type, 0.2, 0.4, peak_start, peak_end, in_water=in_water)
 
         return line1val1, line1val2, line1ave, line2val1, line2val2, line2ave
 
@@ -134,6 +143,7 @@ class Peak:
         self.g250g = penetrometer_data.g250g[self.start:self.end+1].copy()
         self.g200g = penetrometer_data.g200g[self.start:self.end+1].copy()
         self.g50g = penetrometer_data.g50g[self.start:self.end+1].copy()
+        self.g50g_whole = penetrometer_data.g50g.copy()
         self.g18g = penetrometer_data.g18g[self.start:self.end+1].copy()
         self.g2g = penetrometer_data.g2g[self.start:self.end+1].copy()
         self.gX55g = penetrometer_data.gX55g[self.start:self.end+1].copy()
@@ -188,6 +198,7 @@ class Peak:
         if offset is None:
             offset = self._get_meter_offset(meter_to_analyze) 
 
+        self.offset = offset
         self.peak = spliced_meter - offset
         
     def _get_meter_offset(self, meter):
@@ -276,7 +287,7 @@ class Peak:
         # integrates velocity over time for depth
         self.depth = integrate.cumulative_trapezoid(self.velocity, dx=.0005, initial=0)
     
-    def _calculate_average_qsbc(self, correction_type, start_k, end_k, start_range, end_range, tip_type = 'c'):
+    def _calculate_average_qsbc(self, correction_type, start_k, end_k, start_range, end_range, tip_type = 'c', in_water=False):
         """
         Returns the average QSBC between two given strain-rate factors
 
@@ -294,6 +305,8 @@ class Peak:
             ending value of array to be used in calculation
         tip_type: char
             the type of tip the penetrometer has
+        in_water: bool
+            indicates if the drop was performed in water
 
         Return
         ------
@@ -301,9 +314,9 @@ class Peak:
             the average qsbc between the two given strain-rate factors
         """
         # Calculates lower bound array
-        val1 = self.calculate_QSBC_for_K(correction_type, start_k, tip_type)
+        val1 = self.calculate_QSBC_for_K(correction_type, start_k, tip_type, in_water)
         # Calculates higher bound array
-        val2 = self.calculate_QSBC_for_K(correction_type, end_k, tip_type)
+        val2 = self.calculate_QSBC_for_K(correction_type, end_k, tip_type, in_water)
 
         # Cuts off unneeded values
         val1r = val1[start_range - 2:end_range - 1]
