@@ -118,7 +118,6 @@ def main():
         running = display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
                                 peak.depth, peak.velocity, peak.decelleration, peak.qdyn, start, end, tilt_x, tilt_y, do_calculate_pore_pressure)
 
-
         # Determine if this is the first peak and if the user would like to calculate pore pressure for that peak
         if do_calculate_pore_pressure:
             
