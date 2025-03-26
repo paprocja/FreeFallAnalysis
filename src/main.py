@@ -6,11 +6,14 @@ import Utils.io_utils as io
 from UI.Figures.PeakDisplay import *
 from UI.Figures.PorePressureDisplay import *
 from UI.Figures.PenetrometerDataDisplay import display_initial_data
+from UI.Figures.ClayFrameworkDisplay import display_Su_for_K
 from Data.TiltCalculator import calculate_tilt
 from UI.FigureManager import FigureManager
 from Data.PenetrometerData import PenetrometerData
 from Data.Peak import Peak
 from Data.PorePressure import PorePressure
+from Data.ClayFramework import ClayFramework
+
 
 #from Utils.io_utils import prompt_user_for_val, confirm_input_range, confirm_input_spike
 
@@ -118,6 +121,14 @@ def main():
         running = display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
                                 peak.depth, peak.velocity, peak.decelleration, peak.qdyn, start, end, tilt_x, tilt_y, do_calculate_pore_pressure)
 
+        if soil_parameterization.framework == 'clay':
+            framework = ClayFramework(peak, line1ave)
+            # currently "hard coded"
+            #framework.select_other_correction('Logarithmic')
+            #framework.select_min_max_constants(0, max(su)) # will select entire range
+            framework.select_ntk(1) # will output same as QSBC
+            su = framework.proceed()
+            display_Su_for_K(fig_manager, su)
 
         # Determine if this is the first peak and if the user would like to calculate pore pressure for that peak
         if do_calculate_pore_pressure:
