@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
 
@@ -88,7 +87,7 @@ def display_QSBC_for_K(figure_manager, qsbc_for_k, save_data, filename="bearing_
 
 
 def display_corrected_QSBC(figure_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
-                            depth, velocity, deceleration, qdyn, start, end, tilt_x, tilt_y, do_pore, save_data, filename="corrected_qsbc"):
+                            depth, velocity, deceleration, qdyn, start, end, tilt_x, tilt_y, do_pore, save_data, framework, filename="corrected_qsbc"):
     """
     Displays the corrected quasi static bearing capacity
     """
@@ -134,9 +133,9 @@ def display_corrected_QSBC(figure_manager, line1val1, line1val2, line1ave, line2
 
     figure_manager.display(lambda axs :plot(axs), nrows=1, ncols = 2)
 
-    #TODO: Get working
     figure_manager.add_button("Save as PNG", [0.05, 0.05, 0.1, 0.05])
     figure_manager.add_info_text(f"Tilt x:  {tilt_x:.6f}, Tilt y: {tilt_y:.6f}", 0.25, 0.05, 0.50)
+    figure_manager.add_info_text(f"This peak is a {framework}", 0.25, 0, 0.50)
 
     figure_manager.add_button("Continue?", [0.76, 0.05, 0.1, 0.05])
     
@@ -147,8 +146,6 @@ def display_corrected_QSBC(figure_manager, line1val1, line1val2, line1ave, line2
     else:
         figure_manager.wait_for_valid_inputs()
         return None
-    # figure_manager.add_info_text("Resart?", 0.76, 0.00, 0.1)
-    
 
 #Have each field represent a portion of display to allow this to be re-used for each graph
 def display_selected_peak(figure_manager, val, peak):

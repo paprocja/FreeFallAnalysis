@@ -25,6 +25,8 @@ class Validator:
             return self.is_valid_spike(data)
         elif self.type == 'correction':
             return self.is_valid_correction_type(data)
+        elif self.type == 'ntk':
+            return self.is_valid_ntk(data)
         elif self.type == 't_start' or self.type == 't_end':
             return self.is_valid_start_and_end(data, data2)
         elif self.type == 'p_start' or self.type == 'p_end':
@@ -33,7 +35,14 @@ class Validator:
             return self.is_valid_p_inc_and_dec(data, data2)
         else:
             return False
-        
+    
+    def is_valid_ntk(self, ntk):
+        try:
+            ntk = float(ntk)
+            return ntk > 0
+        except:
+            return False
+    
     def is_valid_p_inc_and_dec(self, inc, dec):
         if inc == "" or inc is None:
             return False
