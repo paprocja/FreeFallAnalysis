@@ -38,4 +38,11 @@ The accelerometer data, ppm, and raw data matrices will be output to stdout in t
 
 ## Known issues
 
+## Using JSON to input calibration factors
+
+There is a JSON file in the src folder that contains the outline for inputting calibration factors
+The default values are the current values for blue drop 8, but all the values can be modified to any calibration constant
+To use the constants from the JSON, select the 'json' option in the dropdown from the file select window
+
+
 - If this package is located deep within the file system of your computer, then you may experience issues with selecting multiple files.
