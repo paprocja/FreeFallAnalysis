@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, TextBox, RadioButtons
 import numpy as np  # numpy needed to support the change from single ax to multiple
+from datetime import datetime
 from .Validator import Validator  # Import the Validator class
 
 class FigureManager:
@@ -104,6 +105,16 @@ class FigureManager:
         else:
             self.clear()  # Clear existing content for reuse
 
+        plot_function(self.ax, *args, **kwargs)
+
+        plt.subplots_adjust(bottom=0.1)
+
+        axbutton = plt.axes([0.4, 0.005, 0.1, 0.05])
+        png_button = Button(axbutton, 'Save as PNG')
+        self.buttons.append(png_button)
+        png_button.on_clicked(self.save_to_png)
+
+        self.fig.tight_layout()
         self.ax2 = plot_function(self.ax, *args, **kwargs)
         
         plt.subplots_adjust(bottom=0.1)
@@ -114,9 +125,15 @@ class FigureManager:
 
     def add_button(self, label, position, callback=None):
         """Adds a button."""
-        ax_button = self.fig.add_axes(position)
-        button = Button(ax_button, label)
-        button.on_clicked(self.on_submit)
+        if (label != "Save as PNG"):
+            ax_button = self.fig.add_axes(position)
+            button = Button(ax_button, label)
+            button.on_clicked(self.on_submit)
+        else:
+            ax_button = self.fig.add_axes(position)
+            button = Button(ax_button, label)
+            button.on_clicked(self.save_to_png)
+
         self.buttons.append(button)
 
 
@@ -383,6 +400,9 @@ class FigureManager:
             self.invalid_ax.remove()
             del self.invalid_ax  # Clean up the reference
 
+    def save_to_png(self, event):
+        filename = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        plt.savefig('../saved_data/' + 'figure_' + filename + '.png')
 
     def plot_point(self, x_val, y_val):
         """ 
