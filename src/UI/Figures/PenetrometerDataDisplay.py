@@ -1,5 +1,3 @@
-from ..Validator import Validator
-
 def display_initial_data(figure_manager, g2g, g18g, g50g, g200g, g250g, peaks, heights, number_peaks):
     """
     Displays initial data and peaks using the figure manager.

@@ -2,15 +2,16 @@
 import os
 from Data.SoilParameterization import SoilParameterization
 import UI.FileSelectUI as FileSelectUI
-import Utils.io_utils as io
 from UI.Figures.PeakDisplay import *
 from UI.Figures.PorePressureDisplay import *
 from UI.Figures.PenetrometerDataDisplay import display_initial_data
+from UI.Figures.ClayFrameworkDisplay import display_Su_for_K, redisplay_corrected_qsbc
 from Data.TiltCalculator import calculate_tilt
 from UI.FigureManager import FigureManager
 from Data.PenetrometerData import PenetrometerData
 from Data.Peak import Peak
 from Data.PorePressure import PorePressure
+from Data.ClayFramework import ClayFramework
 from datetime import datetime
 
 #from Utils.io_utils import prompt_user_for_val, confirm_input_range, confirm_input_spike
@@ -41,7 +42,8 @@ def save_to_csv():
     Writes output of binary data to CSV file
     """
     # Allows main to be executed from ui-ffp or ui-ffp/src folders
-    # TODO make it so main can be executed anywhere on the system for packaging
+    if not os.path.exists('../saved_data'):
+        os.makedirs('../saved_data', exist_ok=True)
     penetrometer_data.save_data('../saved_data/' + 'raw_data_' + datetime.now().strftime("%Y-%m-%d_%H%M%S") + '.csv')
 
 def restart() -> bool:
@@ -97,7 +99,7 @@ def main():
         # Once spike is selected, prompt user to select a QSBC correction equation
         correction_type, in_water = display_decel_vel_dep(fig_manager, peak.depth, peak.decelleration, peak.velocity, True)
 
-        # TODO prompt user for correction factor and tip_type
+        # TODO Make iot so that correction factor and tip type can be selected from JSON
         correction_factor = 1.5
         tip_type = 'c'
 
@@ -110,12 +112,24 @@ def main():
         
         line1val1, line1val2, line1ave, line2val1, line2val2, line2ave = peak.calculate_corrected_qsbc(correction_type, start, end, in_water)
 
-         # Get the tilt in the x and y directions
+        # Get the tilt in the x and y directions
         tilt_x, tilt_y = calculate_tilt(spike, peak.end_of_drop, peak.gX55g, peak.gY55g)
 
         # Currently hard coded to use values 1 and 1.5, but whatever values are needed for graph can be used
         running = display_corrected_QSBC(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
-                                peak.depth, peak.velocity, peak.decelleration, peak.qdyn, start, end, tilt_x, tilt_y, do_calculate_pore_pressure, True)
+                                peak.depth, peak.velocity, peak.decelleration, peak.qdyn, start, end, tilt_x, tilt_y, do_calculate_pore_pressure or (soil_parameterization.framework == 'clay'), True, framework=soil_parameterization.framework)
+        
+        if soil_parameterization.framework == 'clay':
+            # Currently hard coded to only support the logarithmic correction. TODO implement the other correction factors
+            ntk = float(redisplay_corrected_qsbc(fig_manager, line1val1, line1val2, line1ave, line2val1, line2val2, line2ave,
+                                peak.depth, peak.velocity, peak.decelleration, peak.qdyn, start, end, tilt_x, tilt_y))
+            print(ntk)
+            framework = ClayFramework(peak, line1ave) # line1ave can be any corrected qsbc
+            framework.select_ntk(ntk) # will output same as QSBC
+            su = framework.proceed()
+            running = display_Su_for_K(fig_manager, su, do_calculate_pore_pressure)
+        else:
+            print('Sand Framework not yet implemented.')
 
         # Determine if this is the first peak and if the user would like to calculate pore pressure for that peak
         if do_calculate_pore_pressure:
@@ -135,17 +149,11 @@ def main():
             pore_pressure.calculate_pore_pressure(profile_increase, profile_decrease)
 
             running = display_pore_pressure(fig_manager, pore_pressure)
-    
-
-        # Prompt user to restart
-        # running = restart(running)
-
 
         if running:
             restart()
-            
-    print("Exiting program.")
 
+    print("Exiting program.")
 
 if __name__ == "__main__":
     main()
