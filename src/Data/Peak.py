@@ -1,6 +1,9 @@
 import math
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 from scipy import integrate
+from datetime import datetime
 
 # Represents a peak where the penetrometer has hit the ground
 class Peak:
@@ -321,6 +324,10 @@ class Peak:
 
         #Finds average between arrays
         ave = (val1r + val2r) / 2
+
+        self.save_corrections(ave, val1r, val2r, start_k, end_k, correction_type)
+
+        #Save the strain rate values with strain type and k-value in title
         
         return val1r, val2r, ave
         
@@ -390,3 +397,26 @@ class Peak:
             A1[k] = A1[k] / 10000  # Convert area to square meters
         
         self.area = A1
+        self.save_area()
+
+    def save_area(self):
+        df = pd.DataFrame({"Area (m^2)": self.area})
+        filename = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        df.to_csv('../saved_data/' + 'area_data_' + filename + '.csv', index=False)
+
+    def save_corrections(self, ave, start_correction, end_correction, start_k, end_k, correction_type):
+        if correction_type == 1:
+            # Logarithmic
+            df = pd.DataFrame({"Log Correction: " + str(start_k): start_correction, "Log Correction: " + str(end_k): end_correction, "Log Correction Average": ave})
+            filename = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+            df.to_csv('../saved_data/' + 'log_correction_' + str(start_k) + '-to-' + str(end_k) + '_' + filename + '.csv', index=False)
+        elif correction_type == 2:
+            # Asinh
+            df = pd.DataFrame({"Asinh Correction: " + str(start_k): start_correction, "Asinh Correction: " + str(end_k): end_correction, "Asinh Correction Average": ave})
+            filename = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+            df.to_csv('../saved_data/' + 'asinh_correction_' + str(start_k) + '-to-' + str(end_k) + '_' + filename + '.csv', index=False)
+        else:
+            # Beta
+            df = pd.DataFrame({"Beta Correction: " + str(start_k): start_correction, "Beta Correction: " + str(end_k): end_correction, "Beta Correction Average": ave})
+            filename = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+            df.to_csv('../saved_data/' + 'beta_correction_' + str(start_k) + '-to-' + str(end_k) + '_' + filename + '.csv', index=False)

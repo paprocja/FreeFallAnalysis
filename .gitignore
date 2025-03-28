@@ -4,3 +4,7 @@
 sponsor-docs/
 
 recordings/
+
+*.csv
+
+*.png
