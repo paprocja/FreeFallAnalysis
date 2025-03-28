@@ -16,7 +16,7 @@ class FileSelectUI:
         file_paths = filedialog.askopenfilenames(title="Select .bin file(s)")
         try:
             # run the command to get the data from the file
-            self.command(file_paths, int(self.selected_option.get()))
+            self.command(file_paths, self.selected_option.get())
         finally:
             self.dispose()
 
@@ -37,7 +37,7 @@ class FileSelectUI:
         self.selected_option = tk.StringVar(self.root)
         self.selected_option.set('8')
         # options
-        options = ['1', '2', '3', '8']
+        options = ['1', '2', '3', '8', 'json']
         # dropdown to select blueDrop id number
         bD_dropdown = tk.OptionMenu(self.root, self.selected_option, *options)
         bD_dropdown.pack(pady=10, padx=25, side="right")
